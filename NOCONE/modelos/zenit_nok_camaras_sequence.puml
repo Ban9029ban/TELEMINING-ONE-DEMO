@@ -1,0 +1,56 @@
+@startuml
+title ZENIT - Secuencia modulo NOK Camaras
+
+autonumber
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+
+actor Operador
+participant "Frontend React\nNokCamarasPage" as FE
+participant "API FastAPI\n/cameras/nok/overview" as API
+participant "Servicio Monitoreo Red\n_refresh_camera_network_snapshot" as Monitor
+database "camera_video" as CameraVideo
+database "camera_network_status_current" as CurrentStatus
+database "camera_network_status_log" as StatusLog
+participant "Camara IP / NVR" as Camera
+participant "Configuracion\n/ cameras / sources" as Config
+
+== Apertura del modulo NOK ==
+Operador -> FE : Abrir /cameras/nok
+FE -> API : GET overview
+API -> CameraVideo : SELECT camaras con nok_enabled = true
+CameraVideo --> API : Inventario NOK + x_pct/y_pct
+API -> CurrentStatus : SELECT estado actual por camera_id
+CurrentStatus --> API : status cached
+
+alt Estado vencido o force=true
+  API -> Monitor : refrescar snapshot NOK
+  loop por cada camara NOK
+    Monitor -> Camera : ICMP ping
+    alt ping no responde
+      Monitor -> Camera : TCP probe puerto RTSP/HTTP
+    end
+    Monitor -> StatusLog : INSERT historico\n(status, is_online, checked_at,\nresponse_ms, error_detail, check_method)
+    Monitor -> CurrentStatus : UPSERT estado actual\n(last_online_at, last_offline_at,\noffline_since, checked_at)
+  end
+end
+
+API -> CameraVideo : leer metadata final NOK
+CameraVideo --> API : nombre, mapa, x_pct, y_pct,\nnok_map_number, nok_display_name
+API --> FE : JSON overview\n(summary + maps + cameras)
+FE --> Operador : Grilla 2x2, popups NOK,\ntabla offline y fullscreen
+
+== Edicion desde Configuracion ==
+Operador -> Config : Editar camara
+Config -> CameraVideo : UPDATE x_pct, y_pct,\nnok_enabled, nok_map_number,\nnok_display_name
+CameraVideo --> Config : cambios persistidos
+Config --> Operador : Confirmacion guardado
+
+Operador -> FE : Reabrir / refrescar NOK Camaras
+FE -> API : GET overview
+API -> CameraVideo : SELECT coordenadas y metadata
+CameraVideo --> API : posicion actualizada
+API --> FE : mismo dato de BD
+FE --> Operador : Waypoint NOK en nueva ubicacion
+
+@enduml

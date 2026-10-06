@@ -1,0 +1,79 @@
+@startuml
+title Arquitectura ZENIT Tag Listener (General)
+
+left to right direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+
+actor "Persona / Vehiculo / Equipo\n(portador del Tag Bluetooth)" as Actor
+
+rectangle "Tag Bluetooth\n(TAGP-XXXX)" as Tag
+
+Actor --> Tag : Lleva Tag asignado
+Tag --> Tag : Beacon Bluetooth
+
+rectangle "Campo / Mina" as Campo {
+  rectangle "Porticos Edge" as EdgePorts {
+    rectangle "Portico Fijo\nPersonas / Vehiculos" as EdgePeople
+    rectangle "Portico Fijo\ncon Sensores" as EdgeSensor
+    rectangle "Portico Movil\nsobre Vehiculo (Bus)" as EdgeBus
+  }
+}
+
+Tag --> EdgePeople
+Tag --> EdgeSensor
+Tag --> EdgeBus
+
+rectangle "Red LoRa / RF\n+ Red Mina" as LoRaNet {
+  rectangle "Enlace LoRa / RF\nEdge -> Backbone" as LoRaLink
+}
+
+EdgePeople --> LoRaLink
+EdgeSensor --> LoRaLink
+EdgeBus --> LoRaLink
+
+rectangle "Backbone Mina\n(Cable Radiante)" as Backbone {
+  rectangle "Portico Backbone /\nConcentrador" as BackbonePort
+  rectangle "Raspberry Pi\nNodo de Comunicaciones" as Rpi
+}
+
+LoRaLink --> BackbonePort
+BackbonePort --> Rpi
+
+rectangle "Red IP\n(LAN / cable radiante / Internet)" as Net {
+  rectangle "TCP/IP\nTramas TCP\n<tag_code ... gateway_code>" as Lan
+}
+
+Rpi --> Lan
+
+rectangle "Servidor Local Mina\nLinux + Docker (On-Prem)" as LocalSrv {
+  rectangle "zenit-listener\n(TCP + GUI)" as LocalListener
+  rectangle "backend-api" as LocalBackend
+  rectangle "PostgreSQL\nBD ZENIT Local" as LocalDB
+}
+
+rectangle "Servidor Cloud\nAWS / GCP\nLinux + Docker" as CloudSrv {
+  rectangle "zenit-listener\n(TCP + GUI)" as CloudListener
+  rectangle "backend-api" as CloudBackend
+  rectangle "PostgreSQL\nBD ZENIT Cloud" as CloudDB
+}
+
+Lan --> LocalListener : Ruta On-Prem
+Lan --> CloudListener : Ruta Cloud
+
+LocalListener --> LocalBackend
+LocalBackend --> LocalDB
+
+CloudListener --> CloudBackend
+CloudBackend --> CloudDB
+
+actor "Operador\nSala de Control" as Operator
+
+Operator --> LocalListener : Acceso GUI On-Prem
+Operator --> CloudListener : Acceso GUI Cloud
+
+@enduml

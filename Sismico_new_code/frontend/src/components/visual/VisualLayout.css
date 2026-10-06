@@ -1,0 +1,151 @@
+.visual-layout-surface { display: none; }
+.visual-layout-surface.is-active { display: block; position: fixed; inset: 0; z-index: 100; background: #edf2f8; }
+.visual-layout-controls { position: relative; z-index: 180; display: flex; gap: 8px; align-items: center; max-width: calc(100vw - 32px); font: 14px/1.4 system-ui, sans-serif; color: #10243d; background: #fff; padding: 8px; border: 1px solid #c7d6e5; border-radius: 12px; box-shadow: 0 6px 24px #10243d25; }
+.visual-layout-controls.is-editing { position: fixed; right: 16px; display: grid; width: 300px; max-height: calc(100dvh - 120px); overflow-y: auto; }
+.visual-layout-controls button { cursor: pointer; border: 1px solid #b7c8dc; background: #eff5fc; color: #10243d; border-radius: 8px; padding: 8px 10px; font: inherit; }
+.visual-layout-controls button:disabled { opacity: .5; cursor: default; }
+.visual-layout-controls label { display: grid; gap: 3px; }
+.visual-layout-controls input, .visual-layout-controls select { width: 100%; box-sizing: border-box; padding: 7px; background: white; color: #10243d; border: 1px solid #b7c8dc; border-radius: 6px; }
+.visual-layout-controls p { margin: 2px 0; }
+.visual-layout-controls [role=alert] { color: #b42318; }
+.visual-layout-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.visual-layout-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.visual-box { position: absolute; box-sizing: border-box; min-width: 0; min-height: 0; }
+.visual-box.is-editing { outline: 2px dashed #5285ba; padding: 0; }
+.visual-box.is-selected { outline: 3px solid #2464de; }
+.visual-box-content { height: 100%; width: 100%; overflow: auto; }
+.visual-box-content > section, .visual-box-content > div { box-sizing: border-box; width: 100% !important; height: 100% !important; min-height: 0 !important; max-height: none !important; margin: 0 !important; }
+.visual-box-handle { position: absolute; top: 0; left: 0; width: 100%; height: 28px; background: #174a85; color: white; border: 0; cursor: move; touch-action: none; text-align: left; z-index: 2; }
+.visual-box-resize { position: absolute; right: 0; bottom: 0; width: 28px; height: 28px; background: #174a85; color: white; border: 0; z-index: 2; cursor: nwse-resize; touch-action: none; }
+.visual-layout-surface .visual-box .visual-box-content [class$="-map-card"] { display: flex !important; flex-direction: column; }
+.visual-layout-surface .visual-box .visual-box-content [class$="-map-body"], .visual-layout-surface .visual-box .visual-box-content .legacy-site-map-area { flex: 1; min-height: 0 !important; height: auto !important; display: flex; flex-direction: column; }
+.visual-layout-surface .visual-box .visual-box-content [class*="-map-viewport"] { flex: 1 1 0; width: 100% !important; height: auto !important; min-height: 0 !important; max-height: none !important; }
+.visual-layout-surface .visual-box .visual-box-content [class$="-groups-scroll"], .visual-layout-surface .visual-box .visual-box-content .legacy-site-table-scroll { max-height: none !important; overflow: auto; }
+.visual-box-content .legacy-site-hide-btn { display: none; }
+@media (max-width: 600px) { .visual-layout-controls.is-editing { width: 230px; } }
+
+.visual-layout-surface .visual-box-content { box-sizing: border-box; padding: 0 !important; margin: 0 !important; min-height: 0 !important; max-height: none !important; }
+.has-visual-layout :is(.legacy-site-toolbar, .andesnorte-toolbar, .pilarnorte-toolbar, .esmeralda-toolbar) { position: fixed; top: 10px; left: 10px; z-index: 150; margin: 0; }
+.has-visual-layout :is(.legacy-site-toolbar, .andesnorte-toolbar, .pilarnorte-toolbar, .esmeralda-toolbar) .legacy-site-box-toggle-wrap { display: none; }
+
+.visual-layout-surface .visual-box .visual-box-content > aside {
+  position: relative !important; inset: auto !important; transform: none !important;
+  width: 100% !important; height: 100% !important; min-width: 0 !important; min-height: 0 !important;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-toolbar, .andesnorte-toolbar, .pilarnorte-toolbar, .esmeralda-toolbar) {
+  position: relative !important; inset: auto !important; display: flex; flex-wrap: wrap; height: 100%;
+}
+.visual-layout-surface .visual-box .cross-map-notification {
+  position: relative !important; inset: auto !important; transform: none !important;
+  width: 100% !important; box-sizing: border-box; margin-bottom: 8px;
+}
+.visual-layout-controls:not(.is-editing) > button:first-child { background: #174a85; color: #fff; font-weight: 700; }
+
+/* Header actions participate in layout; the canvas starts below the header. */
+.tm-header:has(.visual-layout-header-slot) { height: auto; min-height: 92px; padding: 12px 56px 12px 20px; box-sizing: border-box; }
+.tm-header.collapsed:has(.visual-layout-header-slot) { min-height: 64px; }
+.tm-header .tm-header-side.right { gap: 16px; align-items: center; flex-wrap: wrap; }
+.visual-layout-header-slot { min-width: 0; }
+.visual-layout-header-slot .visual-layout-controls { flex-wrap: wrap; box-shadow: none; max-width: 100%; }
+.tm-header .tm-user-block { min-width: 0; flex-shrink: 0; }
+.tm-header .tm-user { white-space: normal; overflow-wrap: anywhere; }
+.has-visual-layout .tm-header:has(.visual-layout-header-slot) { position: fixed; inset: 0 0 auto 0; z-index: 170; }
+.visual-layout-surface .visual-box-content { display: block !important; position: static !important; overflow: auto; }
+.visual-layout-surface .visual-box-content > * { min-width: 0 !important; max-width: 100%; }
+.visual-layout-surface .visual-box-content :is(.legacy-site-map-card, .andesnorte-map-card, .pilarnorte-map-card, .esmeralda-map-card) { display: flex !important; flex-direction: column; overflow: hidden; }
+.visual-layout-surface .visual-box-content :is(.legacy-site-map-title, .andesnorte-map-title, .pilarnorte-map-title, .esmeralda-map-title) { flex-shrink: 0; }
+@media (max-width: 900px) {
+  .tm-header:has(.visual-layout-header-slot) { grid-template-columns: 1fr; gap: 8px; }
+  .tm-header:has(.visual-layout-header-slot) .tm-header-side.left,
+  .tm-header:has(.visual-layout-header-slot) .tm-header-center { display: none; }
+  .tm-header:has(.visual-layout-header-slot) .tm-header-side.right { justify-content: space-between; }
+}
+
+/* The editable panel, rather than the browser viewport, owns content sizing. */
+.visual-layout-surface .visual-box .visual-box-content {
+  container-type: inline-size;
+  container-name: visual-panel;
+  height: 100% !important;
+  width: 100% !important;
+  overflow: hidden;
+}
+.visual-layout-surface .visual-box .visual-box-content > :is(section, div, aside) {
+  min-height: 0 !important;
+  min-width: 0 !important;
+  max-height: 100% !important;
+  overflow: auto;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-table-card, .andesnorte-left-card, .pilarnorte-table-card, .esmeralda-table-card, .legacy-site-project-card, .legacy-site-conn-card) {
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-table-scroll, .andesnorte-groups-scroll, .pilarnorte-groups-scroll, .esmeralda-groups-scroll, .legacy-site-conn-body) {
+  flex: 1 1 0;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  height: auto !important;
+  overflow: auto !important;
+  box-sizing: border-box;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-map-area, .andesnorte-map-body, .pilarnorte-map-body, .esmeralda-map-body) {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  height: auto !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-map-viewport, .andesnorte-map-viewport, .pilarnorte-map-viewport, .esmeralda-map-viewport) {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  min-width: 0 !important;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-map-stack, .andesnorte-map-stack, .pilarnorte-map-stack, .esmeralda-map-stack) {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-project-image-wrap) {
+  flex: 1 1 0;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: hidden;
+}
+.visual-layout-surface .visual-box .visual-box-content .legacy-site-project-image-wrap img {
+  width: 100%; height: 100%; object-fit: contain;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-row, .andesnorte-row, .pilarnorte-row, .esmeralda-row) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) !important;
+  min-width: 0;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-row, .andesnorte-row, .pilarnorte-row, .esmeralda-row) > * {
+  min-width: 0; overflow-wrap: anywhere;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-row-actions, .andesnorte-actions, .pilarnorte-actions, .esmeralda-actions) {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  min-width: 0;
+}
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-state-btn, .andesnorte-state, .pilarnorte-state, .esmeralda-state) {
+  min-width: 0 !important; white-space: normal; overflow-wrap: anywhere;
+  height: auto !important; min-height: 32px; padding: 6px 4px;
+}
+.visual-layout-surface .visual-box .visual-box-content .sic-frame { flex: 1 1 0; min-height: 0; height: auto; }
+.visual-layout-surface .visual-box .visual-box-content .sic-stage-title { flex-shrink: 0; }
+.visual-layout-surface .visual-box .visual-box-content .sic-project-grid { grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); }
+@container visual-panel (max-width: 440px) {
+  .visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-row, .andesnorte-row, .pilarnorte-row, .esmeralda-row) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-row-actions, .andesnorte-actions).mode-dual { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.visual-layout-surface .visual-box .visual-box-content :is(.andesnorte-map-toolbar, .pilarnorte-map-toolbar, .esmeralda-map-toolbar) { flex: 0 0 auto; flex-wrap: wrap; }
+.visual-layout-surface .visual-box .visual-box-content :is(.legacy-site-map-header, .legacy-site-card-title, .andesnorte-card-title, .pilarnorte-card-title, .esmeralda-card-title) { flex-shrink: 0; }
+
+.visual-overlay-settings { border: 1px solid #b7c8dc; border-radius: 8px; padding: 8px; display: grid; gap: 10px; }
+.visual-overlay-settings label { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.visual-overlay-settings input[type="checkbox"] { width: 16px; height: 16px; flex: 0 0 16px; padding: 0; }

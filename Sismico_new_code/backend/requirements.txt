@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pydantic
+pymodbus==3.6.9
+requests
+beautifulsoup4
+
+Pillow

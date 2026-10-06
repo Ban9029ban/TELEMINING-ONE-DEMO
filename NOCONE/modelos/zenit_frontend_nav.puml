@@ -1,0 +1,119 @@
+@startuml
+' ============================
+' ZENIT - Navegacion Frontend / Menu
+' ============================
+skinparam linetype ortho
+
+[*] --> Login
+
+state Login {
+  [*] --> FormLogin
+  FormLogin --> Dashboard : login OK
+}
+
+state "Aplicacion ZENIT" as App {
+  [*] --> Dashboard
+
+  state Dashboard {
+    [*] --> "Widget KPIs"
+  }
+
+  state "Mapa Tiempo Real" as Mapa {
+    [*] --> "Vista General"
+    "Vista General" --> "Filtro por Zona"
+    "Vista General" --> "Detalle Punto / UR"
+    "Detalle Punto / UR" --> "Popup Detalle\n(personas/vehiculos/equipos)"
+  }
+
+  state "Personas" as Personas {
+    [*] --> "Listado Personas"
+    "Listado Personas" --> "Crear/Editar Persona"
+  }
+
+  state "Vehiculos" as Vehiculos {
+    [*] --> "Listado Vehiculos"
+    "Listado Vehiculos" --> "Asignacion Empresa"
+    "Listado Vehiculos" --> "Historial Accesos\npor vehiculo"
+  }
+
+  state "Empresas" as Empresas {
+    [*] --> "Listado Empresas"
+    "Listado Empresas" --> "Crear/Editar Empresa"
+  }
+
+  state "Equipos Criticos" as Equipos {
+    [*] --> "Listado Equipos"
+    "Listado Equipos" --> "Crear/Editar Equipo"
+  }
+
+  state "Porticos" as PorticosUI {
+    [*] --> "Listado Porticos"
+    "Listado Porticos" --> "Detalle Portico"
+    "Detalle Portico" --> "Configurar Clima"
+    "Detalle Portico" --> "Ver Flujo Accesos"
+  }
+
+  state "Clima" as Clima {
+    [*] --> "Tablero Clima"
+    "Tablero Clima" --> "Detalle Variable\npor Portico"
+  }
+
+  state "Camaras / IA" as CamIA {
+    [*] --> "Listado Camaras"
+    "Listado Camaras" --> "Visualizar Stream"
+    "Visualizar Stream" --> "Seleccionar Modelo IA"
+    "Listado Camaras" --> "Editar posicion en plano"
+  }
+
+  state "NOK Camaras" as NokCCTV {
+    [*] --> "Vista 2x2 de planos"
+    "Vista 2x2 de planos" --> "Popup alerta NOK"
+    "Vista 2x2 de planos" --> "Tabla de camaras offline"
+    "Vista 2x2 de planos" --> "Fullscreen general"
+    "Vista 2x2 de planos" --> "Fullscreen por plano"
+    "Vista 2x2 de planos" --> "Actualizar estado IP"
+    "Vista 2x2 de planos" --> "Ocultar / mostrar KPIs"
+  }
+
+  state "Reportes" as Reportes {
+    [*] --> "Selector de Reporte"
+    "Selector de Reporte" --> "Generar Reporte"
+  }
+
+  state "Administracion" as Admin {
+    [*] --> "Usuarios/Roles"
+    "Usuarios/Roles" --> "Crear/Editar Usuario"
+    [*] --> "Parametros Sistema"
+  }
+
+  Dashboard --> Mapa : click "Mapa"
+  Dashboard --> Personas : click "Personas"
+  Dashboard --> Vehiculos : click "Vehiculos"
+  Dashboard --> Empresas : click "Empresas"
+  Dashboard --> Equipos : click "Equipos"
+  Dashboard --> PorticosUI : click "Porticos"
+  Dashboard --> Clima : click "Clima"
+  Dashboard --> CamIA : click "Camaras"
+  Dashboard --> NokCCTV : click "NOK Camaras"
+  Dashboard --> Reportes : click "Reportes"
+  Dashboard --> Admin : click "Administracion"
+
+  Mapa --> Dashboard : logo / "Home"
+  Personas --> Dashboard
+  Vehiculos --> Dashboard
+  Empresas --> Dashboard
+  Equipos --> Dashboard
+  PorticosUI --> Dashboard
+  Clima --> Dashboard
+  CamIA --> Dashboard
+  NokCCTV --> Dashboard
+  Reportes --> Dashboard
+  Admin --> Dashboard
+}
+
+Dashboard --> [*] : logout
+App --> [*] : logout
+
+Login --> [*] : cerrar navegador
+
+@enduml

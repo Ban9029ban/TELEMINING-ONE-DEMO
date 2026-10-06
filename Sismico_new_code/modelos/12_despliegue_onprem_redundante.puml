@@ -1,0 +1,59 @@
+@startuml
+title Despliegue redundante On-Premise — Sismico_new_code
+
+node "Datacenter Mina / Cliente" {
+  node "Balanceador / Reverse Proxy" as LB
+
+  node "Cluster App Primario" {
+    node "Nodo APP 1" {
+      artifact "Frontend React"
+      artifact "Backend FastAPI"
+      artifact "Polling Worker"
+      artifact "Rule Engine"
+    }
+    node "Nodo APP 2" {
+      artifact "Frontend React"
+      artifact "Backend FastAPI"
+      artifact "Polling Worker"
+      artifact "Rule Engine"
+    }
+  }
+
+  node "Cluster BD" {
+    database "PostgreSQL Primario" as PG1
+    database "PostgreSQL Réplica" as PG2
+  }
+
+  node "Servicios IA" {
+    artifact "Ollama Primario" as OLL1
+    artifact "Ollama Secundario" as OLL2
+  }
+
+  node "Storage / Backups" {
+    artifact "Backups DB"
+    artifact "Imágenes mapas / assets"
+    artifact "Logs / auditoría"
+  }
+}
+
+cloud "Red Operacional Mina" {
+  artifact "Fuentes remotas"
+  artifact "PLC / Semáforos"
+  artifact "Pantallas operativas"
+}
+
+LB --> "Nodo APP 1"
+LB --> "Nodo APP 2"
+"Nodo APP 1" --> PG1
+"Nodo APP 2" --> PG1
+PG1 --> PG2 : replicación
+"Nodo APP 1" --> OLL1
+"Nodo APP 2" --> OLL2
+"Nodo APP 1" --> "Fuentes remotas"
+"Nodo APP 2" --> "Fuentes remotas"
+"Nodo APP 1" --> "PLC / Semáforos"
+"Nodo APP 2" --> "PLC / Semáforos"
+"Pantallas operativas" --> LB
+PG1 --> "Backups DB"
+PG2 --> "Backups DB"
+@enduml

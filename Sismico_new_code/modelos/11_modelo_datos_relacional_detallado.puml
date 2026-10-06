@@ -1,0 +1,249 @@
+@startuml
+hide methods
+hide stereotypes
+title Modelo de base de datos relacional detallado — Sismico_new_code
+
+entity organization {
+  * id : uuid <<PK>>
+  --
+  * name : varchar(200)
+  * code : varchar(100) <<UQ>>
+  * is_active : boolean
+  * created_at : timestamptz
+}
+
+entity app_user {
+  * id : uuid <<PK>>
+  --
+  * organization_id : uuid <<FK>>
+  * email : varchar(255) <<UQ>>
+  * full_name : varchar(255)
+  * password_hash : varchar(255)
+  * is_active : boolean
+  * created_at : timestamptz
+}
+
+entity role {
+  * id : uuid <<PK>>
+  --
+  * name : varchar(100) <<UQ>>
+  * description : varchar(255)
+}
+
+entity user_role {
+  * user_id : uuid <<FK>>
+  * role_id : uuid <<FK>>
+  --
+  * assigned_at : timestamptz
+}
+
+entity site {
+  * id : uuid <<PK>>
+  --
+  * organization_id : uuid <<FK>>
+  * name : varchar(200)
+  * code : varchar(100) <<UQ>>
+  * status : varchar(50)
+  * timezone : varchar(80)
+  * created_at : timestamptz
+}
+
+entity site_map {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * name : varchar(200)
+  * image_url : varchar(500)
+  * width : int
+  * height : int
+  * is_active : boolean
+}
+
+entity polygon {
+  * id : uuid <<PK>>
+  --
+  * map_id : uuid <<FK>>
+  * name : varchar(200)
+  * code : varchar(100)
+  * category : varchar(100)
+  * geometry_json : jsonb
+  * default_state : varchar(50)
+  * sort_order : int
+}
+
+entity polygon_state {
+  * id : uuid <<PK>>
+  --
+  * polygon_id : uuid <<FK>>
+  * state : varchar(50)
+  * severity : varchar(50)
+  * source : varchar(50)
+  * raw_payload : jsonb
+  * measured_at : timestamptz
+  * created_at : timestamptz
+}
+
+entity remote_endpoint {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * name : varchar(200)
+  * endpoint_url : varchar(500)
+  * kind : varchar(50)
+  * auth_type : varchar(50)
+  * poll_interval_sec : int
+  * is_enabled : boolean
+  * timeout_sec : int
+}
+
+entity remote_poll_log {
+  * id : uuid <<PK>>
+  --
+  * endpoint_id : uuid <<FK>>
+  * status : varchar(50)
+  * http_status : int
+  * duration_ms : int
+  * response_excerpt : text
+  * executed_at : timestamptz
+}
+
+entity alert_rule {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * name : varchar(200)
+  * severity : varchar(50)
+  * trigger_condition : jsonb
+  * cooldown_sec : int
+  * is_enabled : boolean
+  * created_at : timestamptz
+}
+
+entity alert_event {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * rule_id : uuid <<FK>>
+  * triggered_by_user_id : uuid <<FK>>
+  * severity : varchar(50)
+  * status : varchar(50)
+  * message : text
+  * acknowledged_by_user_id : uuid <<FK>>
+  * triggered_at : timestamptz
+  * acknowledged_at : timestamptz
+  * closed_at : timestamptz
+}
+
+entity semaphore_target {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * name : varchar(200)
+  * target_ip : inet
+  * target_port : int
+  * command_profile : varchar(100)
+  * is_enabled : boolean
+}
+
+entity semaphore_command {
+  * id : uuid <<PK>>
+  --
+  * alert_event_id : uuid <<FK>>
+  * semaphore_target_id : uuid <<FK>>
+  * requested_by_user_id : uuid <<FK>>
+  * command_text : varchar(255)
+  * action : varchar(100)
+  * result_status : varchar(50)
+  * result_message : text
+  * executed_at : timestamptz
+}
+
+entity screen {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * name : varchar(200)
+  * screen_code : varchar(100) <<UQ>>
+  * target_url : varchar(500)
+  * location_hint : varchar(255)
+  * is_enabled : boolean
+}
+
+entity screen_heartbeat {
+  * id : uuid <<PK>>
+  --
+  * screen_id : uuid <<FK>>
+  * browser_session_id : varchar(200)
+  * current_url : varchar(500)
+  * status_code : varchar(50)
+  * user_agent : varchar(500)
+  * sent_at : timestamptz
+}
+
+entity productivity_event {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * sector_name : varchar(200)
+  * event_count : int
+  * energy_value : numeric(18,4)
+  * measured_at : timestamptz
+}
+
+entity ai_faq {
+  * id : uuid <<PK>>
+  --
+  * question : text
+  * answer : text
+  * sort_order : int
+  * is_active : boolean
+}
+
+entity ai_prompt_log {
+  * id : uuid <<PK>>
+  --
+  * user_id : uuid <<FK>>
+  * prompt : text
+  * response : text
+  * source_module : varchar(100)
+  * feedback_score : int
+  * created_at : timestamptz
+}
+
+entity zones_det {
+  * id : uuid <<PK>>
+  --
+  * zone_key : varchar(100) <<UQ>>
+  * zone_name : varchar(200)
+  * sort_order : int
+  * is_active : boolean
+}
+
+organization ||--o{ app_user
+app_user ||--o{ user_role
+role ||--o{ user_role
+
+organization ||--o{ site
+site ||--o{ site_map
+site_map ||--o{ polygon
+polygon ||--o{ polygon_state
+
+site ||--o{ remote_endpoint
+remote_endpoint ||--o{ remote_poll_log
+
+site ||--o{ alert_rule
+alert_rule ||--o{ alert_event
+app_user ||--o{ alert_event : triggered_by
+app_user ||--o{ alert_event : acknowledged_by
+
+site ||--o{ semaphore_target
+alert_event ||--o{ semaphore_command
+semaphore_target ||--o{ semaphore_command
+app_user ||--o{ semaphore_command : requested_by
+
+site ||--o{ screen
+screen ||--o{ screen_heartbeat
+
+site ||--o{ productivity_event
+app_user ||--o{ ai_prompt_log
+@enduml

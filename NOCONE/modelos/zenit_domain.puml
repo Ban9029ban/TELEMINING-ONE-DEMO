@@ -1,0 +1,74 @@
+@startuml
+title Modelo de Dominio ZENIT Tag Listener
+
+skinparam classAttributeIconSize 0
+
+class Tag {
+  +id: bigint
+  +code: text
+  +kind: text
+  +state: text
+}
+
+class TagAssignment {
+  +id: bigint
+  +tag_id: bigint
+  +entity_type: text  <<persona|vehiculo|equipo>>
+  +entity_id: bigint
+  +display_name: text
+  +extra: jsonb
+}
+
+class Gateway {
+  +id: bigint
+  +code: text
+  +name: text
+  +kind: text       <<EDGE_PEOPLE,EDGE_SENSOR,EDGE_BUS,BACKBONE_RPI>>
+  +role: text       <<edge,backbone>>
+  +parent_id: bigint
+  +meta: jsonb
+}
+
+class AccessPortico {
+  +id: bigint
+  +gateway_id: bigint
+  +zone: text
+  +direction: text  <<IN,OUT,BOTH>>
+  +active: bool
+}
+
+class AccessEvent {
+  +id: bigint
+  +msg_id: uuid
+  +tag_id: bigint
+  +gateway_id: bigint
+  +ts_edge: timestamptz
+  +ts_ingested: timestamptz
+  +signal: text
+  +zone: text
+  +direction: text
+  +extra: jsonb
+}
+
+Tag "1" -- "0..*" TagAssignment : asigna >
+Tag "1" -- "0..*" AccessEvent : genera >
+
+Gateway "1" -- "0..*" AccessPortico : define >
+Gateway "1" -- "0..*" AccessEvent : registra >
+Gateway "1" -- "0..*" Gateway : uplink >  # Edge -> Backbone
+
+AccessPortico "1" -- "0..*" AccessEvent : agrupa >
+
+note right of Gateway
+kind:
+- EDGE_PEOPLE
+- EDGE_SENSOR
+- EDGE_BUS
+- BACKBONE_RPI
+
+role:
+- edge
+- backbone
+end note
+
+@enduml

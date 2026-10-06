@@ -1,0 +1,12 @@
+
+mode: http
+listener: { host: 127.0.0.1, http_port: 8080, tcp_port: 7070 }
+rate_per_sec: 10
+jitter_ms: 250
+rssi_base: -62
+rssi_var: 8
+zones: [PORTICO-1, TUNEL-A, CRUCE-4, NIVEL-410, PLANTA]
+entities:
+  - { name: persona-001, uuid: f81d4fae-7dec-11d0-a765-00a0c91e6bf6, major: 100, minor: 1, route: [PORTICO-1, TUNEL-A, CRUCE-4, NIVEL-410], speed_mps: 1.2 }
+  - { name: vehiculo-079, uuid: f81d4fae-7dec-11d0-a765-00a0c91e6bf6, major: 200, minor: 79, route: [PLANTA, CRUCE-4, TUNEL-A], speed_mps: 3.5 }
+

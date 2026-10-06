@@ -1,0 +1,31 @@
+.tm-content.wall-mode {
+  margin-left: 72px;
+}
+
+.tm-body.wall-mode {
+  padding: 0;
+  background: #e9eaee;
+  min-height: 100vh;
+}
+
+.tm-sidebar.wall-mode {
+  width: 72px;
+  min-width: 72px;
+}
+
+.tm-sidebar.wall-mode .tm-brand {
+  display: none;
+}
+
+.tm-sidebar.wall-mode .sidebar-toggle {
+  display: none;
+}
+
+.tm-sidebar.wall-mode .tm-nav-item {
+  justify-content: center;
+  padding: 14px 0;
+}
+
+.tm-sidebar.wall-mode .tm-nav-item span {
+  display: none;
+}

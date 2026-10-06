@@ -1,0 +1,58 @@
+@startuml
+' ============================
+' ZENIT - Flujos Principales de Operación
+' (Actividad de alto nivel)
+' ============================
+start
+
+:Operador abre navegador;
+:Ir a URL de ZENIT;
+:Ingresar credenciales;
+
+if (Credenciales válidas?) then (Sí)
+  :Cargar Dashboard;
+  :Ver KPIs generales y alertas;
+
+  if (Necesita ver mapa?) then (Sí)
+    :Click en menú "Mapa";
+    :Backend entrega puntos, polígonos,\nconteos por zona;
+    :Operador aplica filtros (zona, nivel,\nempresa, tipo de entidad);
+    :Visualizar mapa tiempo real;
+  endif
+
+  if (Necesita revisar accesos pórticos?) then (Sí)
+    :Click en menú "Pórticos";
+    :Seleccionar pórtico;
+    :Ver conteo personas/vehículos,\núltimos eventos;
+    if (Clima habilitado?) then (Sí)
+      :Ver variables de clima y niveles\n(green/yellow/red);
+    endif
+  endif
+
+  if (Necesita cámaras IA?) then (Sí)
+    :Click en menú "Cámaras IA";
+    :Seleccionar cámara;
+    :Seleccionar modelo IA;
+    :Ver detecciones en overlay;
+  endif
+
+  if (Necesita reportes?) then (Sí)
+    :Click en menú "Reportes";
+    :Elegir tipo de reporte\n(accesos, ocupación, clima);
+    :Backend genera dataset;
+    :Descargar Excel/CSV/PDF;
+  endif
+
+  if (Operador es admin / mant?) then (Sí)
+    :Click en "Administración";
+    :Gestionar usuarios, roles,\nparámetros sistema;
+    :Gestionar personas, vehículos,\nempresas, equipos;
+  endif
+
+  :Operador cierra sesión;
+else (No)
+  :Mostrar error de login;
+endif
+
+stop
+@enduml

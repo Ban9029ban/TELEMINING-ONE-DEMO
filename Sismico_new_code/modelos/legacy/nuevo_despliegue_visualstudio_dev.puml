@@ -1,0 +1,24 @@
+@startuml
+title Entorno de desarrollo Visual Studio Code
+
+node "Developer Workstation" {
+  component "VS Code"
+  component "Frontend React Dev Server"
+  component "Backend FastAPI"
+  database "PostgreSQL local"
+}
+
+node "Docker Desktop" {
+  component "Container Frontend"
+  component "Container Backend"
+  component "Container DB"
+}
+
+"VS Code" --> "Frontend React Dev Server"
+"VS Code" --> "Backend FastAPI"
+"Backend FastAPI" --> "PostgreSQL local"
+
+"Container Backend" --> "Container DB"
+"Container Frontend" --> "Container Backend"
+
+@enduml

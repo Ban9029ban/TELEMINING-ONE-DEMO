@@ -1,0 +1,21 @@
+.sismico-generic-layout { display:grid; grid-template-columns:2fr 1fr; gap:16px; align-items:start; }
+.map-panel-wide { min-height:560px; }
+.sismico-side-stack { display:grid; gap:16px; }
+.sismico-map-stage { position:relative; width:100%; min-height:560px; background:rgba(2,6,23,0.45); border-radius:16px; overflow:hidden; }
+.sismico-map-image { width:100%; display:block; border-radius:16px; }
+.sismico-map-svg { position:absolute; inset:0; width:100%; height:100%; }
+.sismico-poly { stroke:rgba(255,255,255,0.85); stroke-width:3; fill-opacity:0.35; }
+.poly-normal { fill:#22c55e; } .poly-warning { fill:#f59e0b; } .poly-critical { fill:#ef4444; } .poly-offline { fill:#6b7280; } .poly-unknown { fill:#64748b; }
+.sismico-poly-label { fill:#fff; font-size:18px; stroke:rgba(0,0,0,0.6); stroke-width:.8; }
+.legend-list,.alerts-list { display:grid; gap:10px; }
+.legend-item,.alert-row { display:flex; align-items:center; gap:10px; }
+.legend-dot { width:12px; height:12px; border-radius:999px; display:inline-block; }
+.state-table { display:grid; gap:8px; }
+.state-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:12px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,0.04); }
+.state-row.head { font-weight:700; background:rgba(255,255,255,0.08); }
+.source-toggle { width:100%; padding:12px 14px; border-radius:999px; border:0; font-weight:700; color:#fff; }
+.source-toggle.on { background:#16a34a; } .source-toggle.off { background:#b91c1c; }
+.muted-line { opacity:.8; margin-top:8px; }
+.home-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-top:16px; }
+.home-card { display:block; padding:16px; border-radius:14px; background:rgba(255,255,255,0.06); text-decoration:none; color:inherit; }
+@media (max-width:1200px){ .sismico-generic-layout { grid-template-columns:1fr; } }

@@ -1,0 +1,20 @@
+@startuml
+title Despliegue sistema legacy
+
+node "Servidor único" {
+  artifact "Aplicación Web"
+  artifact "Scripts Python"
+}
+
+node "Red mina" {
+  artifact "Fuentes sísmicas"
+  artifact "PLC semáforos"
+  artifact "Pantallas de monitoreo"
+}
+
+"Aplicación Web" --> "Scripts JS"
+"Scripts JS" --> "PLC semáforos"
+"Fuentes sísmicas" --> "Scripts JS"
+"Pantallas de monitoreo" --> "Aplicación Web"
+
+@enduml

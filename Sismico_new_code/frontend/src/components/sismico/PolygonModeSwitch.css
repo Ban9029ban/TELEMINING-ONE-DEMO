@@ -1,0 +1,5 @@
+.polygon-mode-switch { font-size: 10px; font-weight: 800; border-radius: 7px; padding: 6px 4px; cursor: pointer; width: 68px; min-width: 0; border: 1px solid #98a7be; color: #123050; background: #dbeafe; }
+.polygon-mode-switch.manual { background: #fff1cf; color: #673800; }
+.polygon-mode-switch:disabled { cursor: not-allowed; opacity: .55; }
+.legacy-site-row:has(> .polygon-mode-switch), .andesnorte-row:has(> .polygon-mode-switch), .pilarnorte-row:has(> .polygon-mode-switch), .esmeralda-row:has(> .polygon-mode-switch) { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.4fr) 68px; gap: 4px; align-items: center; }
+.polygon-control-error { background: #fff1f2; color: #9f1239; padding: 8px; overflow-wrap: anywhere; }

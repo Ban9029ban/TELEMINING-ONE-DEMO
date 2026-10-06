@@ -1,0 +1,51 @@
+URS = ['cbab362d-c981-428e-95d7-3e1f7bd35075',
+ 'f3cab1bf-f611-4738-a97a-efb3753388ee',
+ '5bb97bb0-e134-44cb-8941-6e3018de5e5e',
+ '43d49bee-1fcd-4f54-b9e7-f5b8132586f7',
+ '96ab9cec-e12f-4e97-9627-c56e4e569eba',
+ 'fb664be7-390f-4bff-ae46-9bde038dfa16',
+ 'd61aa843-44ae-436f-ab39-e5feb5fa6958',
+ '398b8c27-5fc5-4575-a499-599e43ad8344',
+ '211f858b-405f-4a02-bdc8-68548bcffbdf',
+ 'e104aeab-3800-49a9-9abc-c1a3a4616052',
+ 'c3e03b50-f280-4bd4-aa0a-3e410b36291d',
+ '3f3eac65-e51c-4f97-b0ee-d800073fe7b8',
+ '52272654-49ad-4ef7-922c-9f0649c04cd8',
+ 'e75c739c-be6b-40f4-8d1a-e950ae2fae9a',
+ '79591f67-f0a6-41fd-9695-209ff186bd8e',
+ '698fc9e6-7650-4f58-8c00-d3d451f1e629',
+ 'd85c16b9-b222-44dc-8011-d53bf42d0e35',
+ 'db5af5a2-b3f9-47e0-b130-0909c29fb11d',
+ 'c213bbab-3e82-4676-9a76-015f8b4a3553',
+ '26c28ac5-a7d0-4fe3-a38e-87c52088d6be',
+ 'c0fc2680-b655-43c5-b872-f92e34a25c70',
+ 'e25fb130-b6ab-4050-bfd2-a7ff5151f12c',
+ 'b2a61fe0-8af0-48cc-9e40-b71229109fdb',
+ 'df3b19c7-0812-43d3-90b6-5c81589493d8',
+ '64446d07-b118-47b9-86e4-70fd0eb92995',
+ '4f691fd8-1e1f-41f2-a5c4-c62ac885e507',
+ 'b4968aa0-dca4-49aa-9c3a-d961ba6840f6',
+ '74882343-fcb2-48e0-8b8b-8c221278ee01',
+ '74e142bf-babb-44f3-ada6-dfafe6743c41',
+ '41253fa6-bc5a-4b93-8ace-be6d4f028a57',
+ 'e2f3463a-227b-421e-96d4-f85b2aaff6a7',
+ '715bd502-7141-40de-b847-c9334ea72ba3',
+ '855efa12-2474-4043-a5ef-78b236c67079',
+ 'f5f532f1-1fdd-4a6c-85fa-b75eb38387a2',
+ '4fc0240e-6533-43f7-980f-3529332be368',
+ '523e160d-fb4a-40e9-9229-e8923c961aa7',
+ '5f1b15cd-1739-4b2d-be7c-38efed89c10b',
+ '7612b8ff-06e4-422e-aebc-cee3761cab24',
+ 'f572762a-4d51-4f9f-9bb0-4ee75d45b80d',
+ '9188d2c7-f486-480e-9973-d54ed1306a6f']
+
+
+
+TEMPERATURA_MEDIA = 23
+TEMPERATURA_VARIANZA = 3
+
+HUMEDAD_MEDIA = 55
+HUMEDAD_VARIANZA = 10
+
+CO2_MEDIA = 600
+CO2_VARIANZA = 300

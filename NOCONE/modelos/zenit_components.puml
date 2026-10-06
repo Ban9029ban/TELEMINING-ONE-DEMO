@@ -1,0 +1,66 @@
+@startuml
+' ============================
+' ZENIT - Diagrama de Componentes
+' ============================
+skinparam linetype ortho
+
+package "Cliente (Usuario)" {
+  [Navegador Web\n(React SPA)] as Browser
+}
+
+package "DMZ / Frontend" {
+  [Reverse Proxy / WAF\n(Nginx/HAProxy)] as Proxy
+  [Frontend React\n(Servido como static)] as FE
+  [Modulo NOK Camaras\n(2x2, fullscreen, alertas)] as FENok
+}
+
+package "Backend Aplicaciones" {
+  [API REST\nFastAPI] as API
+  [Servicio de Ingesta\nTags/Gateways] as Ingesta
+  [Servicio IA\nDeteccion Video] as AIService
+  [Servicio Monitoreo Red CCTV / NOK] as NokMonitor
+  [Servicio Tareas\nasincronas (workers)] as Worker
+}
+
+package "Datos" {
+  [PostgreSQL\nDB ZENIT] as PG
+  [Almacenamiento\nObjetos (clips, imgs)] as Storage
+  [Cola Mensajes\n(Redis/RabbitMQ)] as MQ
+}
+
+package "Campo / Edge" {
+  [UR / Gateways RFID] as UR
+  [Porticos Fisicos\n(Sensores + Gateway)] as Porticos
+  [Camaras IP / NVR] as Cams
+}
+
+Browser --> Proxy : HTTPS
+Proxy --> FE : HTTP static
+FE --> API : HTTPS REST/JSON
+FE --> API : WebSocket\n(eventos tiempo real)
+FE --> FENok : ruta /cameras/nok
+FENok --> API : /cameras/nok/overview\n/cameras/sources
+
+API --> PG : SQL
+API --> MQ : jobs async
+API --> Storage : subir/leer archivos
+API --> NokMonitor : refrescar snapshot NOK\npersistir estado
+
+Ingesta --> PG : insertar access_event\nactualizar vistas
+Ingesta --> MQ : publicar eventos\nrealtime
+UR --> Ingesta : MQTT/HTTP\n(TAG, GATEWAY,...)
+
+Porticos --> UR : lecturas RFID
+Porticos --> Ingesta : datos portico
+
+Cams --> AIService : RTSP/HTTP stream
+Cams --> NokMonitor : ICMP ping / TCP probe
+AIService --> Storage : clips, snapshots
+AIService --> PG : metricas IA\n(futuro)
+NokMonitor --> PG : INSERT log /\nUPSERT estado actual
+
+Worker --> PG
+Worker --> Storage
+Worker --> MQ
+
+@enduml

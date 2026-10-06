@@ -1,0 +1,61 @@
+@startuml
+skinparam componentStyle rectangle
+title Componentes frontend React
+
+package "src" {
+  [App.jsx]
+  [ThemeContext.jsx]
+  [Sidebar.jsx]
+  [Header.jsx]
+  [EmergencyButton.jsx]
+  [MapCanvas.jsx]
+  [SidebarDET.jsx]
+
+  package "pages" {
+    [SismicoHomePage.jsx]
+    [DiamantePage.jsx]
+    [AndesitaPage.jsx]
+    [AndesNortePage.jsx]
+    [ZonasDetPage.jsx]
+    [AgentsPage.jsx]
+    [ProductivityPage.jsx]
+  }
+
+  package "services" {
+    [sismicoApi.js]
+  }
+
+  package "config" {
+    [assets.js]
+  }
+}
+
+[App.jsx] --> [ThemeContext.jsx]
+[App.jsx] --> [Sidebar.jsx]
+[App.jsx] --> [Header.jsx]
+[App.jsx] --> [SismicoHomePage.jsx]
+[App.jsx] --> [DiamantePage.jsx]
+[App.jsx] --> [AndesitaPage.jsx]
+[App.jsx] --> [AndesNortePage.jsx]
+[App.jsx] --> [ZonasDetPage.jsx]
+[App.jsx] --> [AgentsPage.jsx]
+[App.jsx] --> [ProductivityPage.jsx]
+
+[DiamantePage.jsx] --> [EmergencyButton.jsx]
+[DiamantePage.jsx] --> [MapCanvas.jsx]
+[AndesitaPage.jsx] --> [EmergencyButton.jsx]
+[AndesitaPage.jsx] --> [MapCanvas.jsx]
+[AndesNortePage.jsx] --> [EmergencyButton.jsx]
+[AndesNortePage.jsx] --> [MapCanvas.jsx]
+[ZonasDetPage.jsx] --> [SidebarDET.jsx]
+
+[SismicoHomePage.jsx] --> [assets.js]
+[DiamantePage.jsx] --> [assets.js]
+[AndesitaPage.jsx] --> [assets.js]
+[AndesNortePage.jsx] --> [assets.js]
+
+[AndesitaPage.jsx] --> [sismicoApi.js]
+[AgentsPage.jsx] --> [sismicoApi.js]
+[ProductivityPage.jsx] --> [sismicoApi.js]
+[ZonasDetPage.jsx] --> [sismicoApi.js]
+@enduml

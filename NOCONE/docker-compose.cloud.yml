@@ -1,0 +1,293 @@
+version: "3.9"
+
+services:
+  # --- PostgreSQL ---
+  db:
+    image: postgres:16
+    container_name: zenit-db
+    # Solo se usa en desarrollo (DB dentro de Docker). En producción se usa el PostgreSQL real del host.
+    profiles: ["dev"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-zenit}
+      POSTGRES_USER: ${POSTGRES_USER:-zenit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in environment}
+      TZ: America/Santiago
+      PGTZ: America/Santiago
+    ports:
+      # Host:10500 -> Container:5432 (evita conflicto con PostgreSQL instalado en el host)
+      - "${POSTGRES_HOST_PORT:-10500}:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/00_init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+      - ./db/01_indexes_views.sql:/docker-entrypoint-initdb.d/01_indexes_views.sql:ro
+      - ./db/02_extra_models_seed.sql:/docker-entrypoint-initdb.d/02_extra_models_seed.sql:ro
+      - ./db/03_person_extra.sql:/docker-entrypoint-initdb.d/03_person_extra.sql:ro
+      - ./db/04_app_setting.sql:/docker-entrypoint-initdb.d/04_app_setting.sql:ro
+      - ./db/camera_video.sql:/docker-entrypoint-initdb.d/camera_video.sql:ro
+      # - ./db/seed_produccion_min.sql:/docker-entrypoint-initdb.d/seed_produccion_min.sql:ro
+      # - ./db/zenit_demo_1_dia_diamante.sql:/docker-entrypoint-initdb.d/zenit_demo_1_dia_diamante.sql:ro
+      # - ./db/zenit_demo_1_dia_andes.sql:/docker-entrypoint-initdb.d/zenit_demo_1_dia_andes.sql:ro
+      # - ./db/zenit_demo_3_meses.sql:/docker-entrypoint-initdb.d/zenit_demo_3_meses.sql:ro
+      - ./db/zenit_demo_1_dia_todos.sql:/docker-entrypoint-initdb.d/zenit_demo_1_dia_todos.sql:ro
+      - ./db/fix_demo_encoding.sql:/docker-entrypoint-initdb.d/zz_fix_demo_encoding.sql:ro
+      
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-zenit} -d ${POSTGRES_DB:-zenit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # --- API Backend FastAPI ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zenit-backend
+    env_file:
+      # ✅ Fuente única para el ambiente y DB (APP_ENV, POSTGRES_*, PROD_DB_*...)
+      - ./.env
+      # Variables propias del backend (CORS, SECRET_KEY, etc.)
+      - ./backend/.env
+    # Permite llegar al PostgreSQL instalado en el host (CentOS) usando host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      # Para Ollama basta con que el servicio esté arrancado
+      ollama:
+        condition: service_started
+    ports:
+      - "${API_PORT:-8000}:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # --- Web Frontend (Nginx) ---
+  web:
+    build:
+      context: ./web_front
+    container_name: zenit-web
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      TZ: America/Santiago
+    ports:
+      - "${WEB_PORT:-8081}:80"
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: zenit-ollama
+    restart: unless-stopped
+    environment:
+      TZ: America/Santiago
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    entrypoint: ["/bin/bash", "-c"]
+    command: >
+      "
+        ollama serve &
+        sleep 6 &&
+        echo 'Descargando modelo conversacional...' &&
+        ollama pull ${OLLAMA_MODEL:-qwen2.5:3b-instruct} &&
+        echo 'Modelo descargado' &&
+        tail -f /dev/null
+      "
+
+  # --- Listener HTTP / TCP ---
+  listener:
+    build:
+      context: ./listener
+    container_name: zenit-listener
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      BACKEND_BASE_URL: http://zenit-backend:8000/api   # nombre del servicio backend
+      HTTP_PORT: 8080
+      TCP_PORT: 7070
+      LOG_LEVEL: INFO
+      TZ: America/Santiago
+      TMONE_SERVER_IP: 192.168.100.10
+      GAO_READER_ENABLED: "true"
+      GAO_READER_HOSTS: 192.168.100.50
+      GAO_READER_USERNAME: root
+      GAO_READER_PASSWORD: impinj
+      GAO_READER_HTTPS: "false"
+      GAO_READER_VERIFY_TLS: "false"
+      GAO_AUTO_START_INVENTORY: "false"
+      GAO_INVENTORY_PRESET: default
+      GAO_RECONNECT_SECONDS: 5
+      GAO_STREAM_TIMEOUT_SECONDS: 90
+    ports:
+      - "${LISTENER_PORT:-8080}:8080"   # HTTP (health, status)
+      - "7070:7070"                   # TCP (pórticos / RPi)
+    restart: unless-stopped
+
+  test_db:
+    image: postgres:16
+    container_name: zenit-test-db
+    environment:
+      POSTGRES_DB: zenit
+      POSTGRES_USER: zenit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: America/Santiago
+      PGTZ: America/Santiago
+    ports:
+      - "15432:5432"
+    volumes:
+      - test_dbdata:/var/lib/postgresql/data
+      - ./db/00_init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+      - ./db/01_indexes_views.sql:/docker-entrypoint-initdb.d/01_indexes_views.sql:ro
+      - ./db/02_extra_models_seed.sql:/docker-entrypoint-initdb.d/02_extra_models_seed.sql:ro
+      - ./db/03_person_extra.sql:/docker-entrypoint-initdb.d/03_person_extra.sql:ro
+      - ./db/04_app_setting.sql:/docker-entrypoint-initdb.d/04_app_setting.sql:ro
+      - ./db/camera_video.sql:/docker-entrypoint-initdb.d/camera_video.sql:ro
+      - ./db/zenit_demo_1_dia_todos.sql:/docker-entrypoint-initdb.d/zenit_demo_1_dia_todos.sql:ro
+      - ./db/fix_demo_encoding.sql:/docker-entrypoint-initdb.d/zz_fix_demo_encoding.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zenit -d zenit"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  test_backend_app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zenit-test-backend
+    env_file:
+      - ./.env
+      - ./backend/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      test_db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    environment:
+      APP_ENV: test
+      POSTGRES_DB: zenit
+      POSTGRES_USER: zenit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: test_db
+      POSTGRES_PORT: 5432
+      DATABASE_URL: postgresql+asyncpg://zenit:${POSTGRES_PASSWORD}@test_db:5432/zenit
+      TZ: America/Santiago
+    ports:
+      - "18000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  test_listener_app:
+    build:
+      context: ./listener
+    container_name: zenit-test-listener
+    depends_on:
+      test_backend_app:
+        condition: service_healthy
+    environment:
+      BACKEND_BASE_URL: http://test_backend_app:8000/api
+      HTTP_PORT: 8080
+      TCP_PORT: 7070
+      LOG_LEVEL: INFO
+      TZ: America/Santiago
+    ports:
+      - "18080:8080"
+      - "17070:7070"
+
+  test_frontend_app:
+    build:
+      context: .
+      dockerfile: tests/tools/frontend-test.Dockerfile
+    container_name: zenit-test-frontend
+    working_dir: /workspace/web_front
+    depends_on:
+      test_backend_app:
+        condition: service_healthy
+    command: >
+      bash -lc "bash /workspace/tests/scripts/frontend_prepare.sh && rm -rf build && npm run build && npx serve -s build -l 3000"
+    volumes:
+      - ./:/workspace
+      - /workspace/web_front/node_modules
+    environment:
+      CI: "true"
+      REACT_APP_API_URL: http://test_backend_app:8000/api
+      TZ: America/Santiago
+    ports:
+      - "13000:3000"
+
+  test_frontend_unit:
+    build:
+      context: .
+      dockerfile: tests/tools/frontend-test.Dockerfile
+    working_dir: /workspace
+    command: ["bash", "tests/scripts/run_frontend_unit.sh"]
+    volumes:
+      - ./:/workspace
+      - /workspace/web_front/node_modules
+    environment:
+      CI: "true"
+      REACT_APP_API_URL: http://test_backend_app:8000/api
+      TZ: America/Santiago
+
+  test_frontend_build:
+    build:
+      context: .
+      dockerfile: tests/tools/frontend-test.Dockerfile
+    working_dir: /workspace
+    command: ["bash", "tests/scripts/run_frontend_build.sh"]
+    volumes:
+      - ./:/workspace
+      - /workspace/web_front/node_modules
+    environment:
+      CI: "true"
+      REACT_APP_API_URL: http://test_backend_app:8000/api
+      TZ: America/Santiago
+
+  test_frontend_security:
+    build:
+      context: .
+      dockerfile: tests/tools/frontend-test.Dockerfile
+    working_dir: /workspace
+    command: ["bash", "tests/scripts/run_frontend_security.sh"]
+    volumes:
+      - ./:/workspace
+      - /workspace/web_front/node_modules
+    environment:
+      CI: "true"
+      REACT_APP_API_URL: http://test_backend_app:8000/api
+      TZ: America/Santiago
+
+  # --- Simulador de Entidades / Datos ---
+  # simulator:
+  #   build:
+  #     context: ./simulator
+  #   depends_on:
+  #     - listener
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - TZ=America/Santiago
+  #   command: >
+  #     python simulator.py
+  #     --mode http
+  #     --host listener
+  #     --http-port 8080
+  #     --rate 15
+  #     --entities 10
+
+volumes:
+  dbdata:
+  ollama_models:
+  test_dbdata:
+

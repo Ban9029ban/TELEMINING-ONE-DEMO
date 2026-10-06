@@ -1,0 +1,381 @@
+@startuml
+' Diagrama de base de datos ZENIT (PostgreSQL)
+hide circle
+hide methods
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' =========================
+' TABLAS PRINCIPALES
+' =========================
+
+class users <<table>> {
+  +id : bigserial <<PK>>
+  --
+  username : text
+  full_name : varchar(120)
+  hashed_password : text
+  role : text
+  is_active : boolean
+  created_at : timestamp
+}
+
+class tag <<table>> {
+  +id : uuid <<PK>>
+  --
+  code : varchar
+}
+
+class gateway <<table>> {
+  +id : uuid <<PK>>
+  --
+  name : varchar
+}
+
+class access_event <<table>> {
+  +id : uuid <<PK>>
+  --
+  msg_id : uuid
+  tag_id : uuid
+  gateway_id : uuid
+  ts_edge : timestamptz
+  ts_ingested : timestamptz
+  signal : varchar
+  rssi : int
+  zone : varchar
+  direction : varchar
+  level : int
+  kind : varchar
+  extra : jsonb
+}
+
+class map_points <<table>> {
+  +id : serial <<PK>>
+  --
+  site : varchar(80)
+  nivel : varchar(40)
+  name : varchar(120)
+  lat : double
+  lng : double
+  tipo : varchar(40)
+  site_code : varchar(80)
+  point_type : varchar(40)
+  zone : varchar(80)
+  device : varchar(120)
+  map_x : numeric(6,3)
+  map_y : numeric(6,3)
+  sensor : boolean
+  visual_state : varchar(40)
+  count_people : int
+  count_vehicles : int
+}
+
+class map_polygons <<table>> {
+  +id : serial <<PK>>
+  --
+  site : varchar(80)
+  nivel : varchar(40)
+  name : varchar(120)
+  geojson : json
+  site_code : varchar(80)
+  zone : varchar(40)
+}
+
+class ur <<table>> {
+  +id : bigserial <<PK>>
+  --
+  nombre : varchar(120)
+  estado : varchar(40)
+}
+
+class sensor <<table>> {
+  +id : bigserial <<PK>>
+  --
+  ur_id : bigint
+  nombre : varchar(120)
+  online : boolean
+}
+
+class vehicles <<table>> {
+  +id : bigserial <<PK>>
+  --
+  patente : varchar(20)
+  status : varchar(20)
+  level : int
+}
+
+class company <<table>> {
+  +id : bigserial <<PK>>
+  --
+  name : varchar(150)
+  rut : varchar(20)
+  address : varchar(200)
+  phone : varchar(50)
+  email : varchar(120)
+  active : boolean
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+class person <<table>> {
+  +id : bigserial <<PK>>
+  --
+  company_id : bigint
+  rut : varchar(20)
+  full_name : varchar(160)
+  first_name : varchar(80)
+  last_name : varchar(80)
+  birth_date : date
+  address : varchar(200)
+  blood_type : varchar(5)
+  phone : varchar(30)
+  emergency_phone : varchar(30)
+  position : varchar(100)
+  group_name : varchar(80)
+  active : boolean
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+class equipment_type <<table>> {
+  +id : bigserial <<PK>>
+  --
+  code : varchar(40)
+  name : varchar(80)
+  description : text
+}
+
+class equipment <<table>> {
+  +id : bigserial <<PK>>
+  --
+  equipment_type_id : bigint
+  company_id : bigint
+  code : varchar(80)
+  name : varchar(160)
+  description : text
+  critical : boolean
+  active : boolean
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+class vehicle_company <<table>> {
+  +id : bigserial <<PK>>
+  --
+  vehicle_id : bigint
+  company_id : bigint
+  valid_from : timestamp
+  valid_to : timestamp
+  active : boolean
+}
+
+class tag_assignment <<table>> {
+  +id : bigserial <<PK>>
+  --
+  tag_id : uuid
+  entity_type : varchar(32)
+  entity_id : bigint
+  display_name : varchar(160)
+  extra : jsonb
+  active : boolean
+  valid_from : timestamptz
+  valid_to : timestamptz
+  created_at : timestamptz
+  updated_at : timestamptz
+}
+
+class access_portico_type <<table>> {
+  +id : smallserial <<PK>>
+  --
+  code : varchar(32)
+  name : varchar(80)
+  description : text
+}
+
+class access_portico <<table>> {
+  +id : bigserial <<PK>>
+  --
+  gateway_id : uuid
+  map_point_id : int
+  name : varchar(120)
+  specific_name : varchar(120)
+  street_name : varchar(120)
+  trench_name : varchar(120)
+  site : varchar(80)
+  nivel : varchar(40)
+  site_code : varchar(80)
+  zone : varchar(80)
+  portico_type_id : smallint
+  display_shape : varchar(16)
+  has_climate : boolean
+  active : boolean
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+class access_climate_var <<table>> {
+  +id : smallserial <<PK>>
+  --
+  code : varchar(32)
+  name : varchar(80)
+  unit : varchar(20)
+  description : text
+}
+
+class access_portico_climate_cfg <<table>> {
+  +id : serial <<PK>>
+  --
+  portico_id : bigint
+  climate_var_id : smallint
+  green_max : numeric(10,3)
+  yellow_max : numeric(10,3)
+  active : boolean
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+class access_portico_climate_reading <<table>> {
+  +id : bigserial <<PK>>
+  --
+  portico_id : bigint
+  climate_var_id : smallint
+  ts : timestamptz
+  value : numeric(10,3)
+  level : varchar(10)
+  extra : jsonb
+  created_at : timestamptz
+}
+
+class map_polygon_occupancy <<table>> {
+  +id : bigserial <<PK>>
+  --
+  polygon_id : int
+  snapshot_time : timestamptz
+  people_count : int
+  vehicle_count : int
+  critical_equipment_count : int
+  created_at : timestamptz
+}
+
+class map_device <<table>> {
+  +id : bigserial <<PK>>
+  --
+  map_code : text
+  kind : text
+  ref_id : bigint
+  label : text
+  x_pct : numeric(6,3)
+  y_pct : numeric(6,3)
+  created_at : timestamp
+}
+
+class camera_video <<table>> {
+  +id : int <<PK>>
+  --
+  name : text
+  source : text
+  source_type : text
+  camera_ip : text
+  camera_port : int
+  camera_path : text
+  camera_user : text
+  camera_password : text
+  site : text
+  nivel : text
+  map_code : text
+  x_pct : numeric(6,3)
+  y_pct : numeric(6,3)
+  nok_enabled : boolean
+  nok_map_number : int
+  nok_display_name : text
+  notes : text
+  is_seed_overridden : boolean
+  is_active : boolean
+  created_at : timestamptz
+  updated_at : timestamptz
+}
+
+class camera_network_status_log <<table>> {
+  +id : bigserial <<PK>>
+  --
+  camera_id : int
+  camera_name : text
+  camera_ip : text
+  camera_port : int
+  status : text
+  is_online : boolean
+  checked_at : timestamptz
+  response_ms : int
+  error_detail : text
+  check_method : text
+}
+
+class camera_network_status_current <<table>> {
+  +camera_id : int <<PK>>
+  --
+  camera_name : text
+  camera_ip : text
+  camera_port : int
+  status : text
+  is_online : boolean
+  checked_at : timestamptz
+  last_online_at : timestamptz
+  last_offline_at : timestamptz
+  offline_since : timestamptz
+  response_ms : int
+  error_detail : text
+  check_method : text
+  updated_at : timestamptz
+}
+
+class ai_model <<table>> {
+  +id : serial <<PK>>
+  --
+  code : text
+  name : text
+  description : text
+}
+
+' =========================
+' RELACIONES
+' =========================
+
+' Eventos de acceso
+access_event "0..*" --> "0..1" tag : tag_id
+access_event "0..*" --> "0..1" gateway : gateway_id
+
+' UR y sensores
+sensor "0..*" --> "1" ur : ur_id
+
+' Personas / empresas / vehículos / equipos
+person "0..*" --> "0..1" company : company_id
+equipment "0..*" --> "1" equipment_type : equipment_type_id
+equipment "0..*" --> "0..1" company : company_id
+vehicle_company "0..*" --> "1" vehicles : vehicle_id
+vehicle_company "0..*" --> "1" company : company_id
+
+' Asignación de tags a entidades lógicas
+tag_assignment "0..*" --> "1" tag : tag_id
+' entity_type/entity_id apuntan a person, vehicles u otras entidades (relación polimórfica)
+
+' Pórticos y clima
+access_portico "0..*" --> "1" gateway : gateway_id
+access_portico "0..*" --> "0..1" map_points : map_point_id
+access_portico "0..*" --> "1" access_portico_type : portico_type_id
+
+access_portico_climate_cfg "0..*" --> "1" access_portico : portico_id
+access_portico_climate_cfg "0..*" --> "1" access_climate_var : climate_var_id
+
+access_portico_climate_reading "0..*" --> "1" access_portico : portico_id
+access_portico_climate_reading "0..*" --> "1" access_climate_var : climate_var_id
+
+' Mapas
+map_polygon_occupancy "0..*" --> "1" map_polygons : polygon_id
+
+' map_device.ref_id apunta a access_portico o camera_video según kind
+map_device .. access_portico : ref_id (portico)
+map_device .. camera_video : ref_id (camera)
+camera_network_status_log "0..*" --> "1" camera_video : camera_id
+camera_network_status_current "0..1" --> "1" camera_video : camera_id
+
+@enduml

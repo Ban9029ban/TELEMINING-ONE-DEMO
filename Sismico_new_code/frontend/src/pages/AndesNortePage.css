@@ -1,0 +1,494 @@
+
+.andesnorte-page {
+  padding: 8px 14px 14px;
+  color: #22314d;
+}
+
+.andesnorte-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.andesnorte-emergency {
+  border: 0;
+  border-radius: 22px;
+  min-width: 122px;
+  height: 48px;
+  padding: 0 18px;
+  background: #d28761;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.andesnorte-shell {
+  display: grid;
+  grid-template-columns: minmax(560px, 40%) minmax(700px, 60%);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.andesnorte-shell.left-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.andesnorte-shell.map-hidden {
+  grid-template-columns: minmax(560px, 1fr);
+}
+
+.andesnorte-left-card,
+.andesnorte-map-card {
+  background: #f4f6f9;
+  border: 1px solid #e1e5ed;
+  border-radius: 22px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.andesnorte-card-title {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e8ef;
+  font-size: 15px;
+  font-weight: 900;
+  color: #22314d;
+}
+
+.andesnorte-left-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 740px;
+}
+
+.andesnorte-groups-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 10px 14px 70px;
+  overflow: auto;
+}
+
+.andesnorte-group {
+  border: 1px solid #e2e7ef;
+  border-radius: 18px;
+  padding: 10px 14px 12px;
+  margin-bottom: 10px;
+  background: rgba(255,255,255,.16);
+}
+
+.andesnorte-group-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: #24365c;
+  padding: 0 0 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed #d8deea;
+}
+
+.andesnorte-row {
+  display: grid;
+  grid-template-columns: minmax(210px,1fr) minmax(290px, 400px);
+  gap: 12px;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.andesnorte-label {
+  font-size: 13px;
+  font-weight: 900;
+  color: #1e315b;
+  text-transform: uppercase;
+}
+
+.andesnorte-actions {
+  display: grid;
+  gap: 0;
+  width: 100%;
+}
+
+.andesnorte-actions.mode-dual { grid-template-columns: repeat(2, 1fr); }
+.andesnorte-actions.mode-tri,
+.andesnorte-actions.mode-traffic { grid-template-columns: repeat(3, 1fr); }
+
+.andesnorte-state {
+  height: 30px;
+  border-radius: 15px;
+  border: 1px solid #d5dce7;
+  background: #f3f5f8;
+  color: #2f3545;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.andesnorte-state.active.normal,
+.andesnorte-state.active.centro,
+.andesnorte-state.active.verde {
+  background: #58a94f;
+  color: #fff;
+}
+
+.andesnorte-state.active.alerta,
+.andesnorte-state.active.superior,
+.andesnorte-state.active.inferior,
+.andesnorte-state.active.rojo {
+  background: #db4a3d;
+  color: #fff;
+}
+
+.andesnorte-state.active.amarillo {
+  background: #efc13f;
+  color: #1d1d1d;
+}
+
+.andesnorte-footer-logo {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  width: 170px;
+  max-width: 34%;
+  object-fit: contain;
+}
+
+.andesnorte-map-card {
+  min-height: 740px;
+  display: flex;
+  flex-direction: column;
+}
+
+.andesnorte-map-body {
+  padding: 10px 12px 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.andesnorte-map-toolbar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.andesnorte-map-toolbar button {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  border: 1px solid #d7dce8;
+  background: rgba(248,249,252,.96);
+  color: #111;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.andesnorte-map-viewport {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 38px);
+  min-height: 650px;
+  overflow: hidden;
+  background: #f5f6f8;
+  border-radius: 18px;
+}
+
+.andesnorte-map-stack {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  transition: transform .25s ease;
+}
+
+.andesnorte-map-base,
+.andesnorte-map-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+}
+
+.andesnorte-map-overlay {
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.andesnorte-map-overlay.state-centro,
+.andesnorte-map-overlay.state-normal,
+.andesnorte-map-overlay.state-verde {
+  filter: saturate(1.55) contrast(1.14) brightness(1.04);
+  opacity: .98;
+}
+
+.andesnorte-map-overlay.state-inferior,
+.andesnorte-map-overlay.state-superior,
+.andesnorte-map-overlay.state-alerta,
+.andesnorte-map-overlay.state-rojo {
+  filter: saturate(1.6) contrast(1.12) brightness(.99);
+  opacity: .98;
+}
+
+.andesnorte-map-overlay.state-amarillo {
+  filter: saturate(1.28) contrast(1.08) brightness(1.02);
+  opacity: .98;
+}
+
+.andesnorte-map-brand {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.andesnorte-map-brand-logos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.andesnorte-map-brand img {
+  width: 110px;
+  object-fit: contain;
+}
+
+.andesnorte-map-brand-text {
+  text-align: center;
+  line-height: 1;
+  transform: translateY(-4px);
+}
+
+.andesnorte-map-brand-text .main {
+  font-size: 20px;
+  font-weight: 900;
+  color: #4f99a8;
+  letter-spacing: 0.02em;
+}
+
+.andesnorte-map-brand-text .sub {
+  font-size: 11px;
+  color: #787f8f;
+}
+
+.andesnorte-map-brand-text .strong {
+  font-size: 15px;
+  font-weight: 900;
+  color: #444c58;
+}
+
+.andesnorte-last-register {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  min-width: 130px;
+  background: rgba(247,249,252,.95);
+  border: 1px solid #d8dee8;
+  border-radius: 14px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #22314d;
+  z-index: 70;
+}
+.andesnorte-last-register.is-ok { border-color:#7bc47f; color:#1f5132; }
+.andesnorte-last-register.is-warning { border-color:#d8b24f; color:#6f4d00; }
+.andesnorte-last-register.is-danger { border-color:#d37d5b; color:#7d241a; }
+
+.andesnorte-page.wall-mode {
+  padding: 6px 10px 10px;
+  height: calc(100vh - 16px);
+  overflow: hidden;
+}
+
+.andesnorte-page.wall-mode .andesnorte-toolbar {
+  margin-bottom: 8px;
+}
+
+.andesnorte-page.wall-mode .andesnorte-shell {
+  grid-template-columns: minmax(520px, 40%) minmax(660px, 60%);
+  height: calc(100vh - 92px);
+}
+
+.andesnorte-page.wall-mode .andesnorte-left-card,
+.andesnorte-page.wall-mode .andesnorte-map-card {
+  height: 100%;
+  min-height: 0;
+}
+
+.andesnorte-page.wall-mode .andesnorte-groups-scroll {
+  overflow: hidden;
+  padding: 8px 12px 60px;
+}
+
+.andesnorte-page.wall-mode .andesnorte-group {
+  padding: 8px 12px 10px;
+  margin-bottom: 8px;
+}
+
+.andesnorte-page.wall-mode .andesnorte-group-title {
+  font-size: 12px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+}
+
+.andesnorte-page.wall-mode .andesnorte-row {
+  grid-template-columns: minmax(180px,1fr) minmax(260px, 370px);
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.andesnorte-page.wall-mode .andesnorte-label {
+  font-size: clamp(10px, 0.85vw, 13px);
+}
+
+.andesnorte-page.wall-mode .andesnorte-state {
+  height: 27px;
+  font-size: clamp(9px, 0.72vw, 10px);
+}
+
+.andesnorte-page.wall-mode .andesnorte-footer-logo {
+  width: 155px;
+}
+
+.andesnorte-page.wall-mode .andesnorte-map-viewport {
+  min-height: 0;
+  height: calc(100% - 38px);
+}
+
+.andesnorte-page.wall-mode .andesnorte-map-brand img {
+  width: 92px;
+}
+
+.andesnorte-page.wall-mode .andesnorte-map-brand-text .main {
+  font-size: 17px;
+}
+
+.andesnorte-page.wall-mode .andesnorte-map-brand-text .sub {
+  font-size: 10px;
+}
+
+.andesnorte-page.wall-mode .andesnorte-map-brand-text .strong {
+  font-size: 13px;
+}
+
+@media (max-width: 1520px) {
+  .andesnorte-shell,
+  .andesnorte-page.wall-mode .andesnorte-shell {
+    grid-template-columns: minmax(460px, 40%) minmax(560px, 60%);
+  }
+  .andesnorte-row,
+  .andesnorte-page.wall-mode .andesnorte-row {
+    grid-template-columns: minmax(150px,1fr) minmax(220px, 320px);
+  }
+}
+
+@media (max-width: 1280px) {
+  .andesnorte-shell,
+  .andesnorte-page.wall-mode .andesnorte-shell {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .andesnorte-map-card { min-height: 620px; }
+  .andesnorte-page.wall-mode .andesnorte-groups-scroll { overflow: auto; }
+}
+
+
+/* === parpadeo notorio y desfasado: andes norte === */
+@keyframes andesNortePolygonBlink {
+  0%, 100% { opacity: .96; filter: brightness(1) saturate(1); }
+  24% { opacity: .25; filter: brightness(1.24) saturate(1.24); }
+  51% { opacity: .99; filter: brightness(1.08) saturate(1.08); }
+  79% { opacity: .34; filter: brightness(1.2) saturate(1.2); }
+}
+
+.andesnorte-map-overlay {
+  animation-name: andesNortePolygonBlink;
+  animation-duration: 1.82s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  will-change: opacity, filter;
+}
+
+.andesnorte-map-overlay.blink-slot-0 { animation-delay: 0s; }
+.andesnorte-map-overlay.blink-slot-1 { animation-delay: .18s; }
+.andesnorte-map-overlay.blink-slot-2 { animation-delay: .42s; }
+.andesnorte-map-overlay.blink-slot-3 { animation-delay: .68s; }
+.andesnorte-map-overlay.blink-slot-4 { animation-delay: .27s; }
+.andesnorte-map-overlay.blink-slot-5 { animation-delay: .93s; }
+.andesnorte-map-overlay.blink-slot-6 { animation-delay: 1.17s; }
+
+.andesnorte-page.wall-mode .andesnorte-map-overlay {
+  animation-duration: 1.3s;
+}
+
+.andesnorte-page.sic-lock {
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.andesnorte-page.sic-lock .andesnorte-shell {
+  height: 100%;
+  grid-template-columns: 1fr 1fr;
+}
+
+.andesnorte-page.sic-lock .andesnorte-shell.left-hidden,
+.andesnorte-page.sic-lock .andesnorte-shell.map-hidden {
+  grid-template-columns: 1fr;
+}
+
+.andesnorte-page.sic-lock .andesnorte-map-card {
+  min-height: 0;
+  height: 100%;
+}
+
+.andesnorte-page.sic-lock .andesnorte-map-body {
+  height: calc(100% - 44px);
+}
+
+.andesnorte-page.sic-lock .andesnorte-map-viewport {
+  min-height: 0;
+  height: 100%;
+}
+
+/* phase4 emergency + inferior red */
+.legacy-site-state-btn.active.inferior,
+.esmeralda-state.active.inferior,
+.pilarnorte-state.active.inferior {
+  background: #d17454 !important;
+  border-color: #d17454 !important;
+  color: #fff !important;
+}
+.legacy-home-card.sismico-home-card { position: relative; }
+.sismico-home-selector {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.9);
+  border-radius: 6px;
+}
+.sismico-home-selector input { width: 16px; height: 16px; cursor: pointer; }
+.sismico-home-link { color: inherit; text-decoration: none; display: block; }
+.sismico-home-card.emergency-active { box-shadow: 0 0 0 3px rgba(209,116,84,.95) inset; }
+.sismico-home-badge {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #d17454;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+}

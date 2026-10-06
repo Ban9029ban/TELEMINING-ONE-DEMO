@@ -1,0 +1,32 @@
+
+.sismico-emergency-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: rgba(116, 0, 0, 0.18);
+  backdrop-filter: blur(1px);
+}
+
+.sismico-emergency-box {
+  min-width: min(480px, 90vw);
+  padding: 28px 30px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+  color: #fff;
+  box-shadow: 0 20px 48px rgba(0,0,0,.26);
+  text-align: center;
+}
+
+.sismico-emergency-title {
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.sismico-emergency-subtitle {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: .92;
+}

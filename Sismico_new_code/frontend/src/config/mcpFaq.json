@@ -1,0 +1,136 @@
+{
+  "categories": [
+    {
+      "id": "monitoreo",
+      "label": "Monitoreo",
+      "description": "Estado actual del sistema sismico y sus sitios.",
+      "items": [
+        {
+          "id": "resumen_monitoreo",
+          "category_id": "monitoreo",
+          "question": "Dame un resumen del monitoreo actual por sitio.",
+          "description": "Resume fuente, alertas y estado de poligonos por sitio."
+        },
+        {
+          "id": "estado_fuentes",
+          "category_id": "monitoreo",
+          "question": "Que sitios estan online, cached, manual u offline ahora mismo?",
+          "description": "Entrega el estado de lectura por sitio y su ultima sincronizacion."
+        },
+        {
+          "id": "ultimo_registro",
+          "category_id": "monitoreo",
+          "question": "Cual es el ultimo registro visible por sitio?",
+          "description": "Muestra la fecha, hora y origen del dato mas reciente."
+        },
+        {
+          "id": "poligonos_alerta",
+          "category_id": "monitoreo",
+          "question": "Que poligonos estan en warning o critical actualmente?",
+          "description": "Lista los objetos con estados visibles no normales."
+        }
+      ]
+    },
+    {
+      "id": "alertas",
+      "label": "Alertas",
+      "description": "Resumen y detalle de alertas abiertas.",
+      "items": [
+        {
+          "id": "alertas_abiertas",
+          "category_id": "alertas",
+          "question": "Cuantas alertas abiertas hay por sitio?",
+          "description": "Agrupa las alertas activas por sitio."
+        },
+        {
+          "id": "ultimas_alertas",
+          "category_id": "alertas",
+          "question": "Muestrame las alertas abiertas mas recientes.",
+          "description": "Detalle de las alertas abiertas con severidad y fecha."
+        }
+      ]
+    },
+    {
+      "id": "control",
+      "label": "Control",
+      "description": "Semaforos y pantallas registrados en la operacion.",
+      "items": [
+        {
+          "id": "resumen_semaforos",
+          "category_id": "control",
+          "question": "Cuantos semaforos y reglas activas hay por sitio?",
+          "description": "Cuenta dispositivos y reglas habilitadas por sitio."
+        },
+        {
+          "id": "estado_pantallas",
+          "category_id": "control",
+          "question": "Que pantallas estan online y cuando fue su ultimo heartbeat?",
+          "description": "Entrega el estado actual de las pantallas registradas."
+        }
+      ]
+    },
+    {
+      "id": "datos",
+      "label": "Datos operacionales",
+      "description": "Productividad, zonas y tablas auxiliares.",
+      "items": [
+        {
+          "id": "resumen_productividad",
+          "category_id": "datos",
+          "question": "Resume los eventos de productividad cargados en la base de datos.",
+          "description": "Suma eventos, energia y el rango temporal disponible."
+        },
+        {
+          "id": "graficos_productividad",
+          "category_id": "datos",
+          "question": "Muestrame los graficos de productividad sismica disponibles.",
+          "description": "Entrega los graficos del modulo de productividad sismica directamente en el agente."
+        },
+        {
+          "id": "zonas_configuradas",
+          "category_id": "datos",
+          "question": "Lista las zonas DET configuradas.",
+          "description": "Entrega el listado de zonas y su zone_key."
+        }
+      ]
+    },
+    {
+      "id": "analisis",
+      "label": "Analisis IA",
+      "description": "Consultas mas abiertas apoyadas por IA rapida cuando Ollama esta disponible.",
+      "items": [
+        {
+          "id": "riesgos_actuales",
+          "category_id": "analisis",
+          "question": "Cuales son los principales riesgos operativos visibles ahora mismo?",
+          "description": "Sintetiza riesgos segun estado de sitios, alertas y poligonos visibles."
+        },
+        {
+          "id": "acciones_recomendadas",
+          "category_id": "analisis",
+          "question": "Sugiere acciones operativas rapidas segun el estado actual del sistema.",
+          "description": "Entrega recomendaciones breves usando el contexto actual disponible."
+        },
+        {
+          "id": "explica_sitio",
+          "category_id": "analisis",
+          "question": "Explicame en lenguaje simple que esta pasando en un sitio.",
+          "description": "Pide el sitio si falta y resume el contexto operativo con IA rapida."
+        }
+      ]
+    },
+    {
+      "id": "ayuda",
+      "label": "Ayuda",
+      "description": "Significado de estados y como interpretar el sistema.",
+      "items": [
+        {
+          "id": "glosario_estados",
+          "category_id": "ayuda",
+          "question": "Que significan los estados online, cached, manual y offline?",
+          "description": "Explica como interpretar el estado visible del sistema."
+        }
+      ]
+    }
+  ]
+}

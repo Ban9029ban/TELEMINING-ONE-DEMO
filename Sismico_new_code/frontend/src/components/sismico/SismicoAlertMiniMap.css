@@ -1,0 +1,105 @@
+.sismico-alert-mini-map {
+  position: fixed;
+  right: 6px;
+  bottom: 4px;
+  z-index: 8500;
+  width: min(420px, 38vw);
+  height: min(285px, 32vh);
+  min-width: 260px;
+  min-height: 180px;
+  overflow: hidden;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.sismico-alert-mini-map__canvas {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+  filter: drop-shadow(0 12px 12px rgba(15, 23, 42, .2));
+}
+
+.sismico-alert-mini-map__caption {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  display: grid;
+  gap: 1px;
+  max-width: 62%;
+  color: #253755;
+  font-size: .75rem;
+  line-height: 1.15;
+  pointer-events: none;
+  text-align: right;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, .95);
+}
+
+.sismico-alert-mini-map__caption span {
+  color: #a11919;
+  font-size: .65rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.sismico-alert-mini-map__caption.state-warning span {
+  color: #9a5a00;
+}
+
+.sismico-alert-mini-map__caption strong,
+.sismico-alert-mini-map__caption small,
+.sismico-alert-mini-map__caption em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sismico-alert-mini-map__caption strong {
+  font-size: .9rem;
+}
+
+.sismico-alert-mini-map__caption small {
+  font-weight: 700;
+}
+
+.sismico-alert-mini-map__caption em {
+  margin-top: 3px;
+  color: #5f6f8b;
+  font-size: .61rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .sismico-alert-mini-map {
+    width: min(340px, 46vw);
+    height: min(230px, 26vh);
+    min-width: 220px;
+    min-height: 150px;
+  }
+
+  .sismico-alert-mini-map__caption {
+    right: 14px;
+    bottom: 12px;
+  }
+}
+
+@media (max-width: 700px) {
+  .sismico-alert-mini-map {
+    right: 0;
+    bottom: 0;
+    width: 235px;
+    height: 165px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .sismico-alert-mini-map__caption {
+    right: 10px;
+    bottom: 7px;
+    font-size: .62rem;
+  }
+
+  .sismico-alert-mini-map__caption strong {
+    font-size: .7rem;
+  }
+}

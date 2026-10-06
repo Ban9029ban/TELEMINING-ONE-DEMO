@@ -1,0 +1,23 @@
+@startuml
+title Secuencia — Control semáforos viales
+
+actor Operador
+participant "Frontend React" as Front
+participant "Backend FastAPI" as API
+participant "AlertService" as Alert
+participant "SemaphoreService" as Sem
+participant "Script\nipsemaforo accion" as Script
+database "PostgreSQL" as DB
+
+Operador -> Front : confirma emergencia
+Front -> API : POST /alerts/manual-trigger
+API -> Alert : crear evento de emergencia
+Alert -> DB : insertar alert_event
+Alert -> Sem : ejecutar plan de semáforos
+Sem -> Script : ipsemaforo accion <ip> <accion>
+Script --> Sem : resultado
+Sem -> DB : registrar semaphore_command
+Sem --> API : resultado final
+API --> Front : OK / detalle
+Front --> Operador : estado ejecutado
+@enduml

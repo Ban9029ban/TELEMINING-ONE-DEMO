@@ -1,0 +1,41 @@
+@startuml
+title Despliegue Docker / On-Premise
+
+node "Servidor On-Premise / VM" {
+  node "Docker Engine" {
+    node "Container: frontend" {
+      artifact "React + Vite"
+    }
+    node "Container: backend" {
+      artifact "FastAPI + Uvicorn"
+      artifact "Polling jobs"
+      artifact "Motor de reglas"
+    }
+    node "Container: db" {
+      database "PostgreSQL"
+    }
+    node "Container: ollama" {
+      artifact "LLM local"
+    }
+  }
+}
+
+node "Red Mina / Codelco" {
+  node "Fuentes remotas" {
+    artifact "JSON / HTML / API"
+  }
+  node "PLC / Semáforos" {
+    artifact "Script ipsemaforo accion"
+  }
+  node "Pantallas operativas" {
+    artifact "Browsers / TVs / monitores"
+  }
+}
+
+"React + Vite" --> "FastAPI + Uvicorn" : HTTP/REST
+"FastAPI + Uvicorn" --> "PostgreSQL" : SQL
+"FastAPI + Uvicorn" --> "LLM local" : HTTP local
+"Polling jobs" --> "JSON / HTML / API" : lectura programada
+"Motor de reglas" --> "Script ipsemaforo accion" : comando seguro
+"Browsers / TVs / monitores" --> "FastAPI + Uvicorn" : heartbeat / lectura
+@enduml

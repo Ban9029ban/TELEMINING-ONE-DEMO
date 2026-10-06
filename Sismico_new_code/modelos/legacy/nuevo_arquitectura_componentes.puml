@@ -1,0 +1,33 @@
+@startuml
+title Arquitectura moderna Sismico_new_code
+
+package "Frontend React" {
+  [TM Shell]
+  [Modulo Sismico]
+  [Modulo Zonas DET]
+  [Modulo Productividad]
+  [Modulo Agente IA]
+}
+
+package "Backend FastAPI" {
+  [API Gateway]
+  [Motor de reglas]
+  [Servicio Polling]
+  [Servicio Semaforos]
+  [Servicio Heartbeat]
+}
+
+database "PostgreSQL"
+component "Ollama IA"
+component "PLC Semaforos"
+component "Fuentes sismicas"
+
+[TM Shell] --> [API Gateway]
+[Modulo Sismico] --> [API Gateway]
+[API Gateway] --> [Motor de reglas]
+[Motor de reglas] --> [Servicio Semaforos]
+[Servicio Polling] --> "Fuentes sismicas"
+[Servicio Semaforos] --> "PLC Semaforos"
+[API Gateway] --> PostgreSQL
+[Modulo Agente IA] --> "Ollama IA"
+@enduml

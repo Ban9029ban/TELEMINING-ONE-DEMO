@@ -1,0 +1,47 @@
+@startuml
+title Despliegue Cloud GCP — Sismico_new_code
+
+cloud "GCP Region" {
+  node "Cloud DNS / HTTPS LB / Cloud Armor" as GCP_LB
+
+  node "VPC Network" {
+    node "App Tier" {
+      artifact "GKE / Cloud Run Frontend"
+      artifact "GKE / Cloud Run Backend"
+      artifact "Cloud Run Jobs / Polling"
+    }
+
+    node "Data Tier" {
+      database "Cloud SQL PostgreSQL HA" as CLOUDSQL
+      artifact "Memorystore Redis" as MEM
+    }
+
+    node "AI Tier" {
+      artifact "GKE / Compute Engine Ollama"
+      artifact "Cloud Storage Assets"
+    }
+  }
+
+  node "Ops" {
+    artifact "Cloud Logging"
+    artifact "Cloud Monitoring"
+    artifact "Backup / Snapshot"
+  }
+}
+
+cloud "Sitio Mina / Edge" {
+  artifact "Fuentes remotas"
+  artifact "PLC / Semáforos"
+  artifact "Pantallas Browser"
+}
+
+GCP_LB --> "GKE / Cloud Run Frontend"
+GCP_LB --> "GKE / Cloud Run Backend"
+"GKE / Cloud Run Backend" --> CLOUDSQL
+"GKE / Cloud Run Backend" --> MEM
+"GKE / Cloud Run Backend" --> "GKE / Compute Engine Ollama"
+"GKE / Cloud Run Backend" --> "Fuentes remotas"
+"GKE / Cloud Run Backend" --> "PLC / Semáforos"
+"Pantallas Browser" --> GCP_LB
+CLOUDSQL --> "Backup / Snapshot"
+@enduml

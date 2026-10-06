@@ -1,0 +1,55 @@
+ZENIT_portico_v7_prod_sender.ino
+================================
+
+ROL
+---
+El sender recibe datos de Ethernet, WiFi, BLE, sensores o GAO/Impinj y los
+envia de forma confiable por LoRa al receiver. Cada trama LoRa espera ACK;
+si falla, se reintenta y luego se guarda en SD cuando esa funcion esta activa.
+
+MODO DE PRUEBA ACTUAL
+---------------------
+Se controla en ../zenit_lora_radio_config.h:
+  TEST_MODE = true
+
+Con TEST_MODE=true solo se inicializa LoRa. El sender emite LORA_TEST cada
+2 segundos y espera LORA_ACK. Ethernet, WiFi, BLE, GAO, SD y sensores no se
+inicializan ni se atienden. El ENC28J60 queda aislado (CS alto y RESET bajo).
+
+Para produccion cambiar solo:
+  TEST_MODE = false
+
+CHIPSETS Y PINES
+----------------
+LoRa: SX1278/SX127x a 433 MHz
+  SCK=40, MOSI=41, MISO=42, CS=38, RESET=48, DIO0=5.
+Ethernet: ENC28J60
+  Comparte SCK=40, MOSI=41 y MISO=42; CS=39, RESET=8, INT=10.
+MicroSD (bus independiente): SCK=21, MOSI=14, MISO=47, CS=13.
+ADS1115: I2C SDA=11, SCL=12, direccion 0x48.
+
+BUS SPI COMPARTIDO
+------------------
+SX1278 y ENC28J60 nunca deben estar seleccionados simultaneamente. Antes de
+usar LoRa el codigo deja CS Ethernet alto; antes de inicializar/mantener
+Ethernet deja CS LoRa alto. El guard-time es 2 microsegundos, configurable en
+zenit_lora_radio_config.h. No se usan demoras largas en cada lectura para no
+perder paquetes LoRa.
+
+PARAMETROS LORA COMUNES
+-----------------------
+Frecuencia 433.000 MHz, SF7, BW 125 kHz, CR 4/5, Sync Word 0x12, CRC activo,
+potencia 14 dBm y SPI a 2 MHz. Se editan solo en zenit_lora_radio_config.h.
+
+RED EN PRODUCCION
+-----------------
+Ethernet local: 192.168.100.51, puerto TCP 7071.
+GAO/Impinj: 192.168.100.50:80.
+El sender acepta texto TCP y webhook HTTP en 7071; las tramas se encolan
+para LoRa. Payloads largos se fragmentan y el receiver los reensambla.
+
+DIAGNOSTICO
+-----------
+Al arrancar debe aparecer RegVersion=0x12. Si muestra 0x00, 0xFF u otro
+valor, revisar alimentacion 3.3 V, pines SPI, CS=38, RESET=48 y el aislamiento
+del ENC28J60. En prueba se espera: LoRa TX OK y ACK RX kind=DATA.

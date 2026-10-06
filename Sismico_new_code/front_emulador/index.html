@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión operativa Semáforo en tiempo real</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef1f5;
+      --panel: #ffffff;
+      --panel-alt: #f7f9fc;
+      --border: #d7dde8;
+      --text: #22304d;
+      --muted: #6a7692;
+      --accent: #1f315f;
+      --header: #4a5368;
+      --green: #7fc56b;
+      --red: #d98874;
+      --shadow: 0 14px 30px rgba(34, 48, 77, 0.08);
+      font-family: Inter, system-ui, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .page-shell { min-height: 100vh; padding: 18px; }
+
+    .top-banner {
+      background: var(--header);
+      color: white;
+      border-radius: 18px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow);
+    }
+    .top-banner__left { display: grid; gap: 4px; }
+    .top-banner__title { font-size: 1.6rem; font-weight: 800; margin: 0; }
+    .top-banner__subtitle { margin: 0; font-size: 0.92rem; opacity: 0.88; }
+    .top-banner__badge {
+      font-size: 0.86rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.12);
+      padding: 8px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .config-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .config-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .config-card label {
+      display: block;
+      font-size: 0.86rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .config-card input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 0.94rem;
+    }
+
+    .error-banner {
+      display: none;
+      background: #fff1ee;
+      border: 1px solid #efb3a6;
+      color: #8b3e2f;
+      padding: 12px 14px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+
+    .grid-2x2 {
+      display: grid;
+      grid-template-columns: 0.95fr 1.45fr;
+      grid-template-rows: minmax(360px, auto) minmax(380px, auto);
+      gap: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .panel__header h2 {
+      margin: 0;
+      font-size: 1.16rem;
+      color: var(--accent);
+    }
+    .subtle {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+
+    .state-pill {
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .state-red { background: #fde4de; color: #914434; }
+    .state-green { background: #e6f3df; color: #356531; }
+    .state-off { background: #edf1f7; color: #5b6884; }
+
+    .semaphore-panel {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .traffic-light {
+      width: 180px;
+      margin: 0 auto;
+      background: #051126;
+      border-radius: 30px;
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+      box-shadow: inset 0 0 16px rgba(255,255,255,0.04);
+    }
+    .light {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: #10213f;
+      border: 2px solid rgba(255,255,255,0.04);
+    }
+    .light.red.active {
+      background: #f06155;
+      box-shadow: 0 0 18px rgba(240, 97, 85, 0.55);
+    }
+    .light.green.active {
+      background: #76c95f;
+      box-shadow: 0 0 18px rgba(118, 201, 95, 0.55);
+    }
+    .light.amber { background: #8e6c18; opacity: 0.3; }
+    .semaphore-meta {
+      display: grid;
+      gap: 9px;
+      align-content: start;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .monitor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+    .mini-map-card {
+      background: var(--panel-alt);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+    .mini-map-card__header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: #f3f6fb;
+    }
+    .mini-map-card__title {
+      font-weight: 800;
+      color: var(--accent);
+      font-size: 0.95rem;
+    }
+    .mini-map-card__route {
+      color: var(--muted);
+      font-size: 0.75rem;
+      max-width: 54%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .mini-map-frame-wrap {
+      height: 220px;
+      overflow: hidden;
+      position: relative;
+      background: #fff;
+    }
+    .mini-map-frame {
+      width: 1280px;
+      height: 920px;
+      border: 0;
+      transform-origin: top left;
+      pointer-events: none;
+      background: #fff;
+    }
+
+    .payload-box, .history-box, .plc-card {
+      background: var(--panel-alt);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .payload-box { margin-bottom: 12px; }
+    .payload-box h3, .history-box h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+    .payload-box pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 260px;
+      overflow: auto;
+      background: #fff;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      color: #21304c;
+    }
+    .history-list {
+      display: grid;
+      gap: 10px;
+      max-height: 260px;
+      overflow: auto;
+    }
+    .history-row {
+      display: grid;
+      grid-template-columns: 12px 1fr;
+      gap: 10px;
+      align-items: center;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .history-dot, .mini-dot, .plc-status__icon {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .history-dot.state-red, .mini-dot.state-red { background: var(--red); }
+    .history-dot.state-green, .mini-dot.state-green { background: var(--green); }
+    .history-dot.state-off, .mini-dot.state-off { background: #9aa6bf; }
+    .history-title { font-weight: 700; }
+    .history-meta { color: var(--muted); font-size: 0.82rem; margin-top: 4px; }
+
+    .plc-list { display: grid; gap: 12px; }
+    .plc-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .plc-title { font-weight: 800; color: var(--accent); }
+    .plc-ip { color: var(--muted); margin-top: 4px; font-size: 0.88rem; }
+    .plc-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .plc-status.commanded { background: #e6f3df; color: #356531; }
+    .plc-status.idle { background: #edf1f7; color: #5b6884; }
+    .plc-status.commanded .plc-status__icon { background: var(--green); }
+    .plc-status.idle .plc-status__icon { background: #91a0bb; }
+    .plc-commands { display: grid; gap: 10px; }
+    .plc-command-row {
+      display: grid;
+      grid-template-columns: 12px 1fr;
+      gap: 10px;
+      align-items: start;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .plc-command-title { font-weight: 700; color: var(--accent); }
+    .plc-command-state { color: var(--muted); font-size: 0.82rem; margin-top: 4px; }
+    .plc-command-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .cmd-tag {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.76rem;
+      border: 1px solid var(--border);
+      font-weight: 700;
+    }
+    .cmd-tag.on { background: #e6f3df; color: #356531; }
+    .cmd-tag.off { background: #f3f5f9; color: #52617d; }
+    .cmd-tag.neutral { background: #f7efe6; color: #8b6540; }
+    .plc-command-time { margin-top: 8px; color: var(--muted); font-size: 0.76rem; }
+    .empty { color: var(--muted); }
+
+    @media (max-width: 1400px) {
+      .monitor-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 1200px) {
+      .config-row { grid-template-columns: 1fr; }
+      .grid-2x2 { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .semaphore-panel { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="top-banner">
+      <div class="top-banner__left">
+        <h1 class="top-banner__title">Gestión operativa Semáforo en tiempo real</h1>
+        <p class="top-banner__subtitle">Vista consolidada del semáforo, monitoreo miniatura de faenas y proyección PLC espejo.</p>
+      </div>
+      <div class="top-banner__badge">Semáforos: LIVE</div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-card">
+        <label for="api-url">API emulador</label>
+        <input id="api-url" />
+      </div>
+      <div class="config-card">
+        <label for="ops-base-url">Base URL vistas operativas</label>
+        <input id="ops-base-url" />
+      </div>
+    </div>
+
+    <div id="error-banner" class="error-banner"></div>
+
+    <main class="grid-2x2">
+      <section class="panel">
+        <div class="panel__header">
+          <h2>Semáforo principal</h2>
+          <span id="main-state-pill" class="state-pill state-off">SIN DATOS</span>
+        </div>
+        <div class="semaphore-panel">
+          <div class="traffic-light">
+            <div id="light-red" class="light red"></div>
+            <div class="light amber"></div>
+            <div id="light-green" class="light green"></div>
+          </div>
+          <div id="semaphore-meta" class="semaphore-meta"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__header">
+          <h2>Mapa operacional consolidado</h2>
+          <span class="subtle">Mini-monitores en tiempo real de todos los planos</span>
+        </div>
+        <div id="monitor-grid" class="monitor-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__header">
+          <h2>Actividad del emulador</h2>
+          <span class="subtle">Último payload + historial reciente</span>
+        </div>
+        <div class="payload-box">
+          <h3>Último payload</h3>
+          <pre id="payload-pre">{}</pre>
+        </div>
+        <div class="history-box">
+          <h3>Historial reciente</h3>
+          <div id="history-list" class="history-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__header">
+          <h2>PLC espejo operativos</h2>
+          <span class="subtle">Plan de comandos proyectado por IP</span>
+        </div>
+        <div id="plc-list" class="plc-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const SITE_LAYOUTS = [
+      { siteCode: "diamante", label: "Diamante", route: "/legacy-sismico/diamante", scale: 0.34, offsetX: -0, offsetY: -60 },
+      { siteCode: "andesita", label: "Andesita", route: "/legacy-sismico/andesita", scale: 0.34, offsetX: -0, offsetY: -60 },
+      { siteCode: "andes-norte-tunel-correa", label: "Andes Norte Túnel Correa", route: "/legacy-sismico/andes-norte-tunel-correa", scale: 0.34, offsetX: -0, offsetY: -60 },
+      { siteCode: "pilar-norte", label: "Pilar Norte", route: "/legacy-sismico/pilar-norte", scale: 0.34, offsetX: -0, offsetY: -60 },
+      { siteCode: "esmeralda", label: "Esmeralda", route: "/legacy-sismico/esmeralda", scale: 0.34, offsetX: -0, offsetY: -60 },
+    ];
+
+    const PLC_LAYOUT = {
+      plcMirrors: [
+        { ip: "192.168.1.10", label: "PLC CD1 01" },
+        { ip: "192.168.1.30", label: "PLC CD1 02" },
+      ],
+      devices: [
+        { deviceCode: "matrix-emulator:diamante_pipa", label: "Diamante PIPA" },
+        { deviceCode: "matrix-emulator:diamante_footprint_hw", label: "FootPrint HW" },
+        { deviceCode: "matrix-emulator:diamante_footprint_fw", label: "FootPrint FW" },
+        { deviceCode: "matrix-emulator:diamante_bajo_diamante_esmeralda", label: "Bajo Diamante Esmeralda" },
+      ]
+    };
+
+    const SIGNAL_MATRIX = {
+      "matrix-emulator:diamante_pipa": {
+        normal: ["M1=1", "M2=0"],
+        alerta: ["M1=0", "M2=1"],
+        red: ["M1=0", "M2=1"],
+        green: ["M1=1", "M2=0"],
+      },
+      "matrix-emulator:diamante_footprint_hw": {
+        normal: ["M5=1", "M6=0"],
+        alerta: ["M5=0", "M6=1"],
+        red: ["M5=0", "M6=1"],
+        green: ["M5=1", "M6=0"],
+      },
+      "matrix-emulator:diamante_footprint_fw": {
+        normal: ["M3=1", "M4=0"],
+        alerta: ["M3=0", "M4=1"],
+        red: ["M3=0", "M4=1"],
+        green: ["M3=1", "M4=0"],
+      },
+      "matrix-emulator:diamante_bajo_diamante_esmeralda": {
+        inferior: ["M7=1", "M8=0", "M9=0"],
+        centro: ["M7=0", "M8=1", "M9=0"],
+        superior: ["M7=0", "M8=0", "M9=1"],
+        green: ["M7=0", "M8=1", "M9=0"],
+        red: ["M7=1/M9=1", "M8=0"],
+      },
+    };
+
+    const apiUrlInput = document.getElementById("api-url");
+    const opsBaseUrlInput = document.getElementById("ops-base-url");
+    const monitorGrid = document.getElementById("monitor-grid");
+    const errorBanner = document.getElementById("error-banner");
+    const payloadPre = document.getElementById("payload-pre");
+    const historyList = document.getElementById("history-list");
+    const plcList = document.getElementById("plc-list");
+    const mainStatePill = document.getElementById("main-state-pill");
+    const semaphoreMeta = document.getElementById("semaphore-meta");
+    const lightRed = document.getElementById("light-red");
+    const lightGreen = document.getElementById("light-green");
+
+    const defaultApiUrl =
+      window.localStorage.getItem("operativa.semaforo.apiUrl") ||
+      "http://localhost:19090/api/emulator/semaforo/state";
+
+    const defaultOpsBaseUrl =
+      normalizeBaseUrl(window.localStorage.getItem("operativa.semaforo.opsBaseUrl")) ||
+      normalizeBaseUrl(window.location.origin.replace(":19091", ":15173")) ||
+      "http://localhost:15173";
+
+    apiUrlInput.value = defaultApiUrl;
+    opsBaseUrlInput.value = defaultOpsBaseUrl;
+
+    apiUrlInput.addEventListener("change", () => {
+      window.localStorage.setItem("operativa.semaforo.apiUrl", apiUrlInput.value);
+      poll();
+    });
+
+    opsBaseUrlInput.addEventListener("change", () => {
+      const normalized = normalizeBaseUrl(opsBaseUrlInput.value);
+      opsBaseUrlInput.value = normalized;
+      window.localStorage.setItem("operativa.semaforo.opsBaseUrl", normalized);
+      renderMonitors();
+    });
+
+    function normalizeBaseUrl(value) {
+      if (!value) return "";
+      let normalized = String(value).trim().replace(/\/+$/, "");
+      const idx = normalized.toLowerCase().indexOf("/legacy-sismico/");
+      if (idx >= 0) {
+        normalized = normalized.substring(0, idx);
+      }
+      return normalized;
+    }
+
+    function safeJson(value) {
+      try { return JSON.stringify(value, null, 2); } catch { return String(value ?? ""); }
+    }
+    function formatDate(value) {
+      if (!value) return "Sin datos";
+      try { return new Date(value).toLocaleString(); } catch { return String(value); }
+    }
+    function inferControlState(entry) {
+      if (!entry) return "sin-datos";
+      if (entry.state_code) return String(entry.state_code).toLowerCase();
+      if (entry.control_state_code) return String(entry.control_state_code).toLowerCase();
+      const raw = String(entry.state || "").toLowerCase();
+      return raw || "sin-datos";
+    }
+    function inferVisualState(entry) {
+      const state = inferControlState(entry);
+      if (["alerta", "red", "inferior", "superior"].includes(state)) return "red";
+      if (["normal", "green", "centro"].includes(state)) return "green";
+      return "off";
+    }
+    function stateBadgeLabel(entry) {
+      const state = inferControlState(entry);
+      if (!state || state === "sin-datos") return "Sin datos";
+      return state.toUpperCase();
+    }
+    function buildLatestByDevice(history = [], current = null) {
+      const ordered = [...history].sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+      const map = new Map();
+      for (const entry of ordered) {
+        if (!entry || !entry.device_code) continue;
+        if (!map.has(entry.device_code)) map.set(entry.device_code, entry);
+      }
+      if (current && current.device_code && !map.has(current.device_code)) map.set(current.device_code, current);
+      return map;
+    }
+    function buildPlcMirrorView(latestByDevice) {
+      const devices = PLC_LAYOUT.devices.map((polygon) => {
+        const latest = latestByDevice.get(polygon.deviceCode) || null;
+        const controlState = inferControlState(latest);
+        const commands =
+          (SIGNAL_MATRIX[polygon.deviceCode] && SIGNAL_MATRIX[polygon.deviceCode][controlState]) ||
+          (SIGNAL_MATRIX[polygon.deviceCode] && SIGNAL_MATRIX[polygon.deviceCode][latest?.state]) ||
+          [];
+        return {
+          ...polygon,
+          latest,
+          controlState,
+          commands,
+          visualState: inferVisualState(latest),
+          timestamp: latest ? latest.updated_at : null,
+        };
+      });
+      return PLC_LAYOUT.plcMirrors.map((plc) => ({
+        ...plc,
+        status: devices.some((d) => d.latest) ? "commanded" : "idle",
+        devices,
+      }));
+    }
+
+    function renderMonitors() {
+      const base = normalizeBaseUrl(opsBaseUrlInput.value);
+      monitorGrid.innerHTML = "";
+
+      for (const site of SITE_LAYOUTS) {
+        const card = document.createElement("div");
+        card.className = "mini-map-card";
+
+        const src = `${base}${site.route}`;
+        const frameStyle = `transform: translate(${site.offsetX}px, ${site.offsetY}px) scale(${site.scale});`;
+
+        card.innerHTML = `
+          <div class="mini-map-card__header">
+            <div class="mini-map-card__title">${site.label}</div>
+            <div class="mini-map-card__route">${site.route}</div>
+          </div>
+          <div class="mini-map-frame-wrap">
+            <iframe
+              class="mini-map-frame"
+              src="${src}"
+              style="${frameStyle}"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              title="Monitor ${site.label}">
+            </iframe>
+          </div>
+        `;
+        monitorGrid.appendChild(card);
+      }
+    }
+
+    function renderMain(current) {
+      const visualState = inferVisualState(current);
+      lightRed.classList.toggle("active", visualState === "red");
+      lightGreen.classList.toggle("active", visualState === "green");
+
+      mainStatePill.className = `state-pill state-${visualState}`;
+      mainStatePill.textContent = stateBadgeLabel(current);
+
+      semaphoreMeta.innerHTML = `
+        <div><strong>Device:</strong> ${current?.device_code || "Sin datos"}</div>
+        <div><strong>Site:</strong> ${current?.site_code || "Sin datos"}</div>
+        <div><strong>Estado:</strong> ${current?.state || "Sin datos"}</div>
+        <div><strong>Estado control:</strong> ${inferControlState(current)}</div>
+        <div><strong>Actualizado:</strong> ${formatDate(current?.updated_at)}</div>
+        <div><strong>Requested by:</strong> ${current?.requested_by || "Sin datos"}</div>
+        <div><strong>Reason:</strong> ${current?.reason || "Sin datos"}</div>
+      `;
+    }
+
+    function renderHistory(history, current) {
+      payloadPre.textContent = safeJson(current);
+      const recent = [...history]
+        .sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0))
+        .slice(0, 12);
+
+      historyList.innerHTML = "";
+      if (!recent.length) {
+        historyList.innerHTML = `<div class="empty">Sin historial reciente.</div>`;
+        return;
+      }
+
+      for (const entry of recent) {
+        const row = document.createElement("div");
+        row.className = "history-row";
+        row.innerHTML = `
+          <div class="history-dot state-${inferVisualState(entry)}"></div>
+          <div class="history-main">
+            <div class="history-title">${entry.device_code || "Sin device_code"}</div>
+            <div class="history-meta">${stateBadgeLabel(entry)} · ${formatDate(entry.updated_at)}</div>
+          </div>
+        `;
+        historyList.appendChild(row);
+      }
+    }
+
+    function renderPlc(latestByDevice) {
+      const mirrors = buildPlcMirrorView(latestByDevice);
+      plcList.innerHTML = "";
+
+      for (const plc of mirrors) {
+        const card = document.createElement("div");
+        card.className = "plc-card";
+
+        const commandsHtml = plc.devices.map((device) => {
+          const tags = device.commands.length
+            ? device.commands.map((cmd) => {
+                const cls = String(cmd).includes("=1") ? "on" : "off";
+                return `<span class="cmd-tag ${cls}">${cmd}</span>`;
+              }).join("")
+            : `<span class="cmd-tag neutral">Sin plan calculado</span>`;
+
+          return `
+            <div class="plc-command-row">
+              <div class="mini-dot state-${device.visualState}"></div>
+              <div class="plc-command-body">
+                <div class="plc-command-title">${device.label}</div>
+                <div class="plc-command-state">${device.controlState === "sin-datos" ? "Sin datos" : device.controlState}</div>
+                <div class="plc-command-tags">${tags}</div>
+                <div class="plc-command-time">${formatDate(device.timestamp)}</div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        card.innerHTML = `
+          <div class="plc-card__header">
+            <div>
+              <div class="plc-title">${plc.label}</div>
+              <div class="plc-ip">${plc.ip}</div>
+            </div>
+            <div class="plc-status ${plc.status}">
+              <span class="plc-status__icon"></span>
+              ${plc.status === "commanded" ? "Comandos emitidos" : "Sin actividad"}
+            </div>
+          </div>
+          <div class="plc-commands">${commandsHtml}</div>
+        `;
+        plcList.appendChild(card);
+      }
+    }
+
+    async function poll() {
+      const apiUrl = apiUrlInput.value.trim();
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        errorBanner.style.display = "none";
+        errorBanner.textContent = "";
+
+        const history = Array.isArray(data?.history) ? data.history : [];
+        const latestByDevice = buildLatestByDevice(history, data);
+
+        renderMain(data);
+        renderHistory(history, data);
+        renderPlc(latestByDevice);
+      } catch (err) {
+        errorBanner.style.display = "block";
+        errorBanner.textContent = `Error de consulta: ${err?.message || "No fue posible consultar el emulador."}`;
+      }
+    }
+
+    opsBaseUrlInput.value = normalizeBaseUrl(opsBaseUrlInput.value);
+    renderMonitors();
+    poll();
+    setInterval(poll, 2000);
+  </script>
+</body>
+</html>

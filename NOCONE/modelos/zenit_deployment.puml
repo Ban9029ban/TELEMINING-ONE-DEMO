@@ -1,0 +1,57 @@
+@startuml
+' ============================
+' ZENIT - Diagrama de Despliegue / Red
+' ============================
+skinparam linetype ortho
+
+node "Cliente Usuario" {
+  node "PC Operador\n/ Laptop" as PC {
+    artifact "Navegador Web" as Browser
+  }
+}
+
+node "Red Corporativa\n/ VPN Mina" {
+  node "DMZ" {
+    node "Reverse Proxy / WAF\n(Nginx/HAProxy)" as Proxy
+  }
+
+  node "Zona Aplicaciones" {
+    node "Servidor Frontend\n(React static)" as FE
+    node "Servidor API\n(FastAPI)" as APISrv
+    node "Servidor Workers\n(Tasks async)" as WorkerSrv
+    node "Servidor IA\n(GPU/CPU)" as AISrv
+  }
+
+  node "Zona Datos" {
+    node "Servidor PostgreSQL" as PGSrv
+    node "Servidor Storage\n(NAS/MinIO/S3)" as StoreSrv
+    node "Broker Mensajes\n(Redis/RabbitMQ)" as MQSrv
+  }
+
+  node "Red Campo / Edge" {
+    node "UR / Gateways RFID" as UR
+    node "Pórticos Físicos" as Porticos
+    node "Cámaras IP / NVR" as Cams
+  }
+}
+
+Browser --> Proxy : HTTPS
+Proxy --> FE : HTTP(S)\ncontenido estático
+Proxy --> APISrv : HTTPS\nREST/WebSocket
+
+APISrv --> PGSrv : TCP 5432
+APISrv --> MQSrv : TCP\n(queue jobs)
+APISrv --> StoreSrv : HTTP(S)\n(archivos)
+
+WorkerSrv --> PGSrv
+WorkerSrv --> MQSrv
+WorkerSrv --> StoreSrv
+
+AISrv --> StoreSrv : subir clips\nsnapshots
+AISrv --> PGSrv : guardar métricas\n(futuro)
+
+UR --> APISrv : HTTP/MQTT\n(eventos TAG/GATEWAY)
+Porticos --> UR
+Cams --> AISrv : RTSP/HTTP\nstream
+
+@enduml

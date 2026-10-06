@@ -1,0 +1,14 @@
+@startuml
+title Máquina de estados — Polígono sísmico
+
+[*] --> SIN_DATOS
+SIN_DATOS --> NORMAL : llega medición válida
+NORMAL --> CENTRO : cambio de nivel
+CENTRO --> ALERTA : umbral crítico / regla
+NORMAL --> ALERTA : disparo directo
+ALERTA --> NORMAL : normalización validada
+CENTRO --> NORMAL : normalización
+ALERTA --> SIN_DATOS : pérdida prolongada
+NORMAL --> SIN_DATOS : timeout
+CENTRO --> SIN_DATOS : timeout
+@enduml

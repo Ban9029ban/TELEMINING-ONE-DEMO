@@ -1,0 +1,201 @@
+services:
+  # --- PostgreSQL ---
+  db:
+    image: postgres:16
+    container_name: zenit-db
+    # Solo se usa en desarrollo (DB dentro de Docker). En producción se usa el PostgreSQL real del host.
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-zenit}
+      POSTGRES_USER: ${POSTGRES_USER:-zenit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in environment}
+      TZ: America/Santiago
+      PGTZ: America/Santiago
+    ports:
+      # Host:10500 -> Container:5432 (evita conflicto con PostgreSQL instalado en el host)
+      - "${POSTGRES_HOST_PORT:-10500}:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/00_init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+      - ./db/01_indexes_views.sql:/docker-entrypoint-initdb.d/01_indexes_views.sql:ro
+      - ./db/02_extra_models_seed.sql:/docker-entrypoint-initdb.d/02_extra_models_seed.sql:ro
+      - ./db/03_person_extra.sql:/docker-entrypoint-initdb.d/03_person_extra.sql:ro
+      - ./db/04_app_setting.sql:/docker-entrypoint-initdb.d/04_app_setting.sql:ro
+      - ./db/camera_video.sql:/docker-entrypoint-initdb.d/05_camera_video.sql:ro
+
+      # DEMO - escenario predeterminado para desarrollo y deploy_daily.sh.
+      # No combinar con prueba_lora.sql: ese perfil limpia los vehículos y hace
+      # fallar la validación de datos demo del deploy.
+      - ./db/seed_produccion_min.sql:/docker-entrypoint-initdb.d/09_demo_base_limpia.sql:ro
+      - ./db/zenit_demo_1_dia_diamante.sql:/docker-entrypoint-initdb.d/10_demo_diamante.sql:ro
+      # Escenarios alternativos; cargar solamente uno adicional al de Diamante.
+      # - ./db/zenit_demo_1_dia_andes.sql:/docker-entrypoint-initdb.d/10_demo_andes.sql:ro
+      # - ./db/zenit_demo_1_dia_todos.sql:/docker-entrypoint-initdb.d/10_demo_todos.sql:ro
+      # El deploy diario carga este escenario extendido como post-init.
+      # - ./db/zenit_demo_3_meses.sql:/docker-entrypoint-initdb.d/11_demo_tres_meses.sql:ro
+
+      # DEMO - correcciones y movimiento simulado.
+      # zenit_demo_1_dia_diamante ya crea personas, tags, pórticos y eventos.
+      # Estos dos fixes completan la distribución de entradas/salidas por pórtico.
+      - ./db/fix_demo_encoding.sql:/docker-entrypoint-initdb.d/12_demo_fix_encoding.sql:ro
+      - ./db/99_fix_fleet_activity_seed.sql:/docker-entrypoint-initdb.d/13_demo_fleet_activity.sql:ro
+      - ./db/99_fix_fleet_full_distribution.sql:/docker-entrypoint-initdb.d/14_demo_fleet_distribution.sql:ro
+
+      # PERFIL LORA - alternativo; descomentar solamente cuando no se use DEMO.
+      # - ./db/prueba_lora.sql:/docker-entrypoint-initdb.d/10_prueba_lora.sql:ro
+
+      # PILOTO EN MINA - perfil alternativo y limpio para ejecución en faena.
+      # Para usarlo, comentar completamente DEMO y PRODUCCIÓN antes de descomentar.
+      # - ./db/zenit_piloto_produccion.sql:/docker-entrypoint-initdb.d/20_piloto_mina.sql:ro
+      
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-zenit} -d ${POSTGRES_DB:-zenit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # --- API Backend FastAPI ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zenit-backend
+    cap_add:
+      - NET_RAW
+    env_file:
+      # ✅ Fuente única para el ambiente y DB (APP_ENV, POSTGRES_*, PROD_DB_*...)
+      - ./.env
+      # Variables propias del backend (CORS, SECRET_KEY, etc.)
+      - ./backend/.env
+    environment:
+      APP_ENV: ${APP_ENV:-develop}
+      POSTGRES_HOST: ${POSTGRES_HOST:-zenit-db}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      TMONE_LISTENER_RFID_SUMMARY_URL: ${TMONE_LISTENER_RFID_SUMMARY_URL:-http://zenit-listener:8090/rfid-summary}
+    volumes:
+      - ./db:/app/db_seed:ro
+    # Permite llegar al PostgreSQL instalado en el host (CentOS) usando host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      # `db` no se declara aquí porque vive solo en profile dev.
+      # En desarrollo el backend espera la BD vía start.sh usando
+      # POSTGRES_HOST=zenit-db y POSTGRES_PORT=5432.
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+    ports:
+      - "${API_PORT:-8000}:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # --- Web Frontend (Nginx) ---
+  web:
+    build:
+      context: ./web_front
+    container_name: zenit-web
+    depends_on:
+      backend:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      TZ: America/Santiago
+    ports:
+      - "${WEB_PORT:-8081}:80"
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:0.23.2
+    container_name: zenit-ollama
+    restart: unless-stopped
+    environment:
+      TZ: America/Santiago
+    expose:
+      - "11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    command: ["serve"]
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  ollama-init:
+    image: ollama/ollama:0.23.2
+    container_name: zenit-ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+    environment:
+      OLLAMA_HOST: http://zenit-ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b-instruct}
+      TZ: America/Santiago
+    volumes:
+      - ollama_models:/root/.ollama
+    entrypoint:
+      - /bin/sh
+      - -lc
+      - ollama pull "$${OLLAMA_MODEL}"
+
+  # --- Listener HTTP / TCP ---
+  listener:
+    build:
+      context: ./listener
+    container_name: zenit-listener
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      BACKEND_BASE_URL: http://zenit-backend:8000/api   # nombre del servicio backend
+      HTTP_PORT: ${HTTP_PORT:-8090}
+      TCP_PORT: ${TCP_PORT:-7070}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      TZ: America/Santiago
+      TMONE_SERVER_IP: ${TMONE_SERVER_IP:-192.168.100.10}
+      GAO_READER_ENABLED: "${GAO_READER_ENABLED:-true}"
+      GAO_READER_HOSTS: ${GAO_READER_HOSTS:-192.168.100.50}
+      GAO_READER_USERNAME: ${GAO_READER_USERNAME:-root}
+      GAO_READER_PASSWORD: ${GAO_READER_PASSWORD:-impinj}
+      GAO_READER_HTTPS: "${GAO_READER_HTTPS:-false}"
+      GAO_READER_VERIFY_TLS: "${GAO_READER_VERIFY_TLS:-false}"
+      GAO_EVENT_STREAM_ENABLED: "${GAO_EVENT_STREAM_ENABLED:-false}"
+      GAO_AUTO_START_INVENTORY: "${GAO_AUTO_START_INVENTORY:-false}"
+      GAO_INVENTORY_PRESET: ${GAO_INVENTORY_PRESET:-default}
+      GAO_RECONNECT_SECONDS: ${GAO_RECONNECT_SECONDS:-5}
+      GAO_STREAM_TIMEOUT_SECONDS: ${GAO_STREAM_TIMEOUT_SECONDS:-90}
+    ports:
+      - "${LISTENER_WEB_PORT:-8090}:${HTTP_PORT:-8090}"   # Web monitor del listener
+      - "${TCP_PORT:-7070}:${TCP_PORT:-7070}"             # Ingestion unificada: BLE/LoRa TCP + webhook Impinj/GAO
+    restart: unless-stopped
+
+  # --- Simulador de Entidades / Datos ---
+  # simulator:
+  #   build:
+  #     context: ./simulator
+  #   depends_on:
+  #     - listener
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - TZ=America/Santiago
+  #   command: >
+  #     python simulator.py
+  #     --mode http
+  #     --host listener
+  #     --http-port 8080
+  #     --rate 15
+  #     --entities 10
+
+volumes:
+  dbdata:
+  ollama_models:
+

@@ -1,0 +1,49 @@
+@startuml
+title Despliegue híbrido redundante — On-Premise + Cloud
+
+node "On-Premise Mina" {
+  node "Reverse Proxy Local" as LOCAL_LB
+  node "Cluster APP Local" {
+    artifact "Frontend Local"
+    artifact "Backend Local"
+    artifact "Polling / Rule Engine"
+  }
+  database "PostgreSQL Local" as LOCAL_DB
+  artifact "Ollama Local" as LOCAL_AI
+  artifact "PLC / Semáforos" as PLC
+  artifact "Fuentes remotas Mina" as REM
+}
+
+cloud "Cloud (AWS o GCP)" {
+  node "Load Balancer Cloud" as CLOUD_LB
+  artifact "Frontend Cloud"
+  artifact "Backend Cloud"
+  database "PostgreSQL Cloud HA" as CLOUD_DB
+  artifact "Ollama Cloud" as CLOUD_AI
+  artifact "Backup / DR"
+  artifact "Monitoreo central"
+}
+
+artifact "Pantallas Browser" as SCREENS
+
+SCREENS --> LOCAL_LB : preferente
+SCREENS --> CLOUD_LB : contingencia / remoto
+
+LOCAL_LB --> "Frontend Local"
+LOCAL_LB --> "Backend Local"
+"Backend Local" --> LOCAL_DB
+"Backend Local" --> LOCAL_AI
+"Backend Local" --> PLC
+"Backend Local" --> REM
+
+CLOUD_LB --> "Frontend Cloud"
+CLOUD_LB --> "Backend Cloud"
+"Backend Cloud" --> CLOUD_DB
+"Backend Cloud" --> CLOUD_AI
+
+LOCAL_DB --> CLOUD_DB : replicación / backup
+LOCAL_DB --> "Backup / DR"
+CLOUD_DB --> "Backup / DR"
+"Backend Local" --> "Monitoreo central"
+"Backend Cloud" --> "Monitoreo central"
+@enduml

@@ -1,0 +1,16 @@
+﻿node_modules/
+dist/
+.vite/
+__pycache__/
+*.pyc
+*.pyo
+*.log
+coverage/
+htmlcov/
+.venv/
+venv/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+logs/

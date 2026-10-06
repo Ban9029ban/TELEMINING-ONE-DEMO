@@ -1,0 +1,54 @@
+@startuml
+title Secuencia: Tag → Edge → LoRa → Backbone/RPi → Listener → Backend → BD
+
+actor Trabajador as Op
+participant "Tag Bluetooth\n(TAGP-XXXX)" as Tag
+participant "Pórtico Edge\n(Fijo/Sensor/Bus)" as Edge
+participant "Red LoRa / RF\n+ Red Mina" as LoRaNet
+participant "Pórtico Backbone\nConcentrador" as Backbone
+participant "Raspberry Pi\nNodo Comunicaciones" as Rpi
+participant "Red IP\n(LAN / cable radiante)" as Net
+participant "zenit-listener\n(TCP Server + GUI)" as Listener
+participant "backend-api\n(REST/gRPC)" as Backend
+database "BD ZENIT\n(PostgreSQL)" as DB
+
+== Asignación de Tag ==
+Op -> Backend : Registrar tag_assignment\n(tag → persona/vehiculo/equipo)
+Backend -> DB : INSERT tag_assignment
+DB --> Backend
+Backend --> Op
+
+== Lectura en terreno ==
+Tag -> Edge : Beacon Bluetooth\n(id_tag, RSSI)
+Edge -> Edge : Filtra tags validos\nsegun configuracion local
+
+Edge -> LoRaNet : Trama LoRa/RF\n(tag_code, rssi, tipo_edge,\n ts_local, otros)
+LoRaNet -> Backbone : Entrega trama al concentrador
+
+Backbone -> Rpi : Enlace local\n(serie / RS485 / SPI)
+Rpi -> Net : Abre socket TCP\nhacia zenit-listener
+Rpi -> Net : Envia linea\n<tag_code:BT:YYYY-MM-DDTHH:MM:SS:GW_BACKBONE_01:EDGE_BUS:rssi=-70>
+
+== Ingesta en Listener ==
+Net -> Listener : Recibe linea TCP
+Listener -> Listener : parse_frame()\n→ msg_id, edge_id, ts_edge,\n tag_code, edge_kind, rssi, extra
+
+Listener -> Backend : POST /ingest/access-event\n(JSON con la lectura)
+
+Backend -> DB : SELECT tag.id\nFROM tag WHERE code = tag_code
+DB --> Backend : tag_id
+
+Backend -> DB : SELECT gateway.id\nFROM gateway WHERE code = edge_id\n(get_or_create_gateway)
+DB --> Backend : gateway_id
+
+Backend -> DB : INSERT access_event\n(msg_id, tag_id, gateway_id,\n ts_edge, ts_ingested, signal,\n zone, direction, extra)
+DB --> Backend : OK
+Backend --> Listener : {status: "ok"}
+
+== Visualización ==
+Op -> Backend : GET /dashboard/porticos
+Backend -> DB : Consultas a vistas\n(contadores, interior, buses)
+DB --> Backend
+Backend --> Op : KPIs, conteos, ultimas lecturas
+
+@enduml

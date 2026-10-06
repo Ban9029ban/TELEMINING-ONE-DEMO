@@ -1,0 +1,88 @@
+@startuml
+' Diagrama de alto nivel de flujos operacionales ZENIT
+
+skinparam linetype ortho
+
+actor "Operador Centro Control" as Operador
+actor "Jefe de Turno" as JefeTurno
+actor "Mantenimiento / Ingeniería" as Mant
+actor "Sistemas Externos\n(Corporativo / Mina)" as ExtSys
+
+package "Plataforma ZENIT" {
+  [Frontend Web React\n(Mapas, KPIs, C&aacute;maras)] as FE
+  [API Backend\n(FastAPI / Python)] as API
+  [DB PostgreSQL\n(Esquema ZENIT)] as DB
+  [Motor Ingesta Tags/Gateways] as Ingesta
+  [Módulo Gestión Pórticos\n+y Clima] as ModPorticos
+  [Motor IA Cámaras\n(YOLO / ONNX)] as AI
+}
+
+package "Campo / Edge" {
+  [URs / Gateways RFID] as EdgeUR
+  [Pórticos de Acceso] as PorticosFísicos
+  [Cámaras IP / NVR] as Cams
+}
+
+' Relaciones externas
+Operador --> FE : Monitorear mapas,\nKPIs, c&aacute;maras
+JefeTurno --> FE : Revisar ocupación,\nexportar reportes
+Mant --> FE : Ver estado UR/\nsensores/pórticos
+FE --> API : REST/JSON\n(consumo de datos)
+API --> DB : SELECT/INSERT/UPDATE
+
+' Ingesta de eventos
+EdgeUR --> Ingesta : Eventos RFID / Tag\n(tag_id, gateway_id,...)
+Ingesta --> DB : INSERT access_event,\nnormalización JSON extra
+Ingesta --> API : Notificaciones en tiempo real\n(WebSocket / eventos)
+
+' Gestión de pórticos y clima
+PorticosFísicos --> EdgeUR : Lecturas tag / gateway
+PorticosFísicos --> ModPorticos : Sensores de clima\n(TEMP/HUM/WIND)
+ModPorticos --> DB : INSERT access_portico_climate_reading
+API --> DB : SELECT access_portico,\naccess_portico_climate_cfg,\nviews de contadores
+
+' Motor IA de cámaras
+Cams --> AI : Stream RTSP / archivo MP4\n(camera_video.source)
+AI --> DB : (futuro) métricas de detección,\nconteos por frame
+FE --> API : Selección de video\n+ modelo IA (ai_model.code)
+API --> AI : Parametrización de inferencia
+
+' Flujos típicos de operación
+== Flujo 1: Control de acceso ==
+Operador -> FE : Ver tablero de acceso
+FE -> API : GET /dash/access
+API -> DB : Leer vw_access_portico_counters,\nvw_access_interior
+DB --> API : Datos agregados por pórtico
+API --> FE : KPIs y estado actual
+FE --> Operador : Mostrar personas/vehículos\ndentro por zona
+
+== Flujo 2: Vigilancia de ocupación por polígonos ==
+Operador -> FE : Seleccionar polígono en mapa
+FE -> API : GET /map/polygons/occupancy
+API -> DB : SELECT map_polygons,\nmap_polygon_occupancy
+DB --> API
+API --> FE : Ocupación (personas,\nvehículos, equipos críticos)
+FE --> Operador : Mapa de calor de ocupación
+
+== Flujo 3: Supervisión de clima en pórticos ==
+JefeTurno -> FE : Ver pórticos con clima
+FE -> API : GET /porticos/clima
+API -> DB : SELECT access_portico,\naccess_portico_climate_cfg,\nlecturas recientes
+DB --> API
+API --> FE : Valores + nivel (green/yellow/red)
+FE --> JefeTurno : Alertas de viento,\ntemperatura, etc.
+
+== Flujo 4: Administración de entidades ==
+Mant -> FE : Gestionar personas,\nvehículos, empresas, equipos
+FE -> API : CRUD /company, /person,\n/vehicles, /equipment
+API -> DB : INSERT/UPDATE/DELETE\ncompany, person, vehicles,\nvehicle_company, equipment
+DB --> API
+API --> FE
+FE --> Mant : Confirmación y\nvisualización de cambios
+
+' Integración externa
+ExtSys --> API : Consultas de KPIs,\nreportes resumidos
+API --> DB : Vistas vw_* y métricas
+API --> ExtSys : JSON/CSV/Excel
+
+@enduml

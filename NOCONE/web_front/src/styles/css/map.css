@@ -1,0 +1,149 @@
+/* Estilos generales del contenedor del mapa */
+.map-container {
+  position: relative;
+  width: 100%;
+  height: auto;
+}
+/* Estilos para los puntos en el mapa */
+.map-point {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%; /* Círculo por defecto */
+  transition: transform 0.2s ease-in-out;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  animation: vibrate 1s infinite;
+  /* Estilo base por si acaso */
+  background-color: #00ff00; /* Gris por defecto como desconectado */
+}
+/* Colores para los puntos NO sensores (debe ser aplicado por getPointClassName) */
+.map-point.blue {
+  background-color: #1e90ff; /* Azul */
+  border-radius: 50%; /* Asegurar forma redonda */
+}
+.map-point.off {
+  background-color: #b0b0b0 !important; /* Gris para desconectados */
+  border-radius: 50%;
+}
+/* Estilos para puntos sensores - sobreescribe propiedades si es necesario */
+.map-point.sensor {
+  border-radius: 0; /* Cuadrado */
+  width: 12px;
+  height: 12px;
+  background-color: #00ff00; /* Verde por defecto para sensores, puede ser sobreescrito por green/yellow */
+  animation: none; /* Desactivar animación para sensores si se desea */
+}
+/* Efecto al pasar el cursor sobre cualquier punto */
+.map-point:hover, /* Aplicar a todos los puntos */
+.map-point.active {
+  transform: scale(1.5) translate(-33.33%, -33.33%) !important;
+  z-index: 100; /* Elevar z-index en hover */
+}
+/* Colores para puntos que cambian (por ejemplo, sensores) */
+.map-point.green {
+  background-color: #00ff00; /* Verde */
+}
+.map-point.yellow {
+  background-color: #ffff00; /* Amarillo */
+}
+/* Animación de vibración */
+/* @keyframes vibrate {
+  0% { transform: translate(-50%, -50%) translateX(0); }
+  25% { transform: translate(-50%, -50%) translateX(-1px); }
+  50% { transform: translate(-50%, -50%) translateX(1px); }
+  75% { transform: translate(-50%, -50%) translateX(-1px); }
+  100% { transform: translate(-50%, -50%) translateX(0); }
+} */
+/* Estilos para la tabla de detalles */
+.details-tooltip {
+  position: absolute;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  z-index: 1000;
+  max-width: 300px;
+}
+.details-tooltip h6 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+.details-tooltip table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.details-tooltip td {
+  padding: 5px 0;
+}
+.details-tooltip td:first-child {
+  font-weight: bold;
+}
+/* Estilos para la tabla de sensores */
+.sensor-info-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.urt-info-icons {
+  display: flex;
+  gap: 10px;
+}
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.icon-count {
+  font-size: 12px;
+}
+.sensor-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.sensor-table th,
+.sensor-table td {
+  padding: 5px 0;
+  text-align: left;
+}
+.sensor-table th {
+  border-bottom: 1px solid #ddd;
+  font-weight: bold;
+}
+.badge {
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.bg-success {
+  background-color: #00ff00;
+  color: #222;
+}
+.bg-warning {
+  background-color: #e68900 ;
+  color: #fff;
+}
+.bg-yellow {
+  background-color: #FFB300;
+  color: #222;
+}
+.bg-danger {
+  background-color: #ff0000;
+  color: #fff;
+}
+
+.highlighted-point {
+  border: 3px solid #ffeb3b;
+  box-shadow: 0 0 0 18px rgba(255, 235, 59, 0.25), 0 0 32px 12px rgba(255, 235, 59, 0.8);
+  z-index: 999;
+  width: 16px !important;
+  height: 16px !important;
+  animation: pulse-highlight 1.5s ease-in-out infinite;
+}
+@keyframes pulse-highlight {
+  0% { box-shadow: 0 0 0 18px rgba(255, 235, 59, 0.25), 0 0 32px 12px rgba(255, 235, 59, 0.8); }
+  50% { box-shadow: 0 0 0 28px rgba(255, 235, 59, 0.35), 0 0 64px 24px rgba(255, 235, 59, 1); }
+  100% { box-shadow: 0 0 0 18px rgba(255, 235, 59, 0.25), 0 0 32px 12px rgba(255, 235, 59, 0.8); }
+}

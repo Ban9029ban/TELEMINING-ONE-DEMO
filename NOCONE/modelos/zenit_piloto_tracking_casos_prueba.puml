@@ -1,0 +1,39 @@
+@startuml
+title Piloto Tracking RFID por LoRa - Casos de prueba de aceptacion
+left to right direction
+skinparam shadowing false
+
+actor "Operador RFID" as operator
+actor "Tecnico de terreno" as technician
+actor "Usuario supervisor" as supervisor
+
+rectangle "Modulo Tracking ZENIT" {
+  usecase "PT-01\nValidar placas, LoRa\ny listener" as pt01
+  usecase "PT-02\nLeer tag fisico\nautorizado" as pt02
+  usecase "PT-03\nIdentificar a Felipe" as pt03
+  usecase "PT-04\nPersistir evento\ny ultima ubicacion" as pt04
+  usecase "PT-05\nMostrar pórtico\ncon comunicacion online" as pt05
+  usecase "PT-06\nBuscar Felipe\nen Flota" as pt06
+  usecase "PT-07\nRechazar EPC\nno autorizado" as pt07
+  usecase "PT-08\nRecuperar red\no radio" as pt08
+  usecase "PT-09\nActualizar interfaz" as pt09
+  usecase "PT-10\nDeclarar alcance\nde direccion" as pt10
+}
+
+technician --> pt01
+technician --> pt08
+operator --> pt02
+operator --> pt07
+supervisor --> pt03
+supervisor --> pt05
+supervisor --> pt06
+supervisor --> pt09
+supervisor --> pt10
+
+pt02 .> pt01 : <<include>>
+pt03 .> pt02 : <<include>>
+pt04 .> pt03 : <<include>>
+pt05 .> pt04 : <<include>>
+pt06 .> pt04 : <<include>>
+pt09 .> pt05 : <<include>>
+@enduml

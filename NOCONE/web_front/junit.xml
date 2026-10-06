@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="3" failures="1" errors="0" time="1.378">
+  <testsuite name="api-config" errors="0" failures="1" skipped="0" timestamp="2026-04-02T16:48:45" time="0.112" tests="2">
+    <testcase classname="api-config prioriza REACT_APP_API_URL" name="api-config prioriza REACT_APP_API_URL" time="0.033">
+    </testcase>
+    <testcase classname="api-config fallback en navegador productivo usa origin/api" name="api-config fallback en navegador productivo usa origin/api" time="0.003">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: &quot;http://localhost:8081/api&quot;
+Received: &quot;http://localhost/api&quot;
+    at Object.&lt;anonymous&gt; (/workspace/web_front/src/tests/api-config.test.js:21:25)</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="undefined" errors="0" failures="0" skipped="0" timestamp="2026-04-02T16:48:46" time="0.178" tests="1">
+    <testcase classname=" App monta el provider y las rutas generales" name=" App monta el provider y las rutas generales" time="0.018">
+    </testcase>
+  </testsuite>
+</testsuites>

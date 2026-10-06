@@ -1,0 +1,98 @@
+
+/* Ajuste global SOLO para modo dashboard.
+   Mantiene wall/pantalla sin cambios. */
+
+.legacy-site-page:not(.wall-mode) .legacy-site-shell {
+  display: grid !important;
+  grid-template-columns: minmax(360px, 42%) minmax(0, 1fr) !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+  min-width: 0 !important;
+}
+
+.legacy-site-page:not(.wall-mode) .legacy-site-left,
+.legacy-site-page:not(.wall-mode) .legacy-site-map-card,
+.legacy-site-page:not(.wall-mode) .legacy-site-project-card,
+.legacy-site-page:not(.wall-mode) .legacy-site-table-card,
+.legacy-site-page:not(.wall-mode) .legacy-site-map-stack {
+  min-width: 0 !important;
+}
+
+.legacy-site-page:not(.wall-mode) .legacy-site-map-card {
+  overflow: hidden;
+}
+
+.legacy-site-page:not(.wall-mode) .legacy-site-map-area {
+  padding: 10px 12px 12px;
+}
+
+.legacy-site-page:not(.wall-mode) .legacy-site-map-viewport {
+  width: 100% !important;
+  min-height: clamp(520px, 58vh, 820px) !important;
+  height: calc(100vh - 320px) !important;
+  max-height: 820px !important;
+  overflow: hidden !important;
+}
+
+.legacy-site-page:not(.wall-mode) .legacy-site-map-stack {
+  width: 100% !important;
+  height: 100% !important;
+  transform-origin: center center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.legacy-site-page:not(.wall-mode) .legacy-site-map-base,
+.legacy-site-page:not(.wall-mode) .legacy-site-map-overlay {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+.legacy-site-page:not(.wall-mode) .legacy-site-project-image-wrap {
+  min-height: 220px !important;
+}
+
+.legacy-site-page:not(.wall-mode) .legacy-site-table-card {
+  min-height: 440px !important;
+}
+
+@media (max-width: 1450px) {
+  .legacy-site-page:not(.wall-mode) .legacy-site-shell {
+    grid-template-columns: minmax(320px, 39%) minmax(0, 1fr) !important;
+  }
+
+  .legacy-site-page:not(.wall-mode) .legacy-site-map-viewport {
+    min-height: clamp(500px, 54vh, 760px) !important;
+    height: calc(100vh - 310px) !important;
+  }
+}
+
+@media (max-width: 1220px) {
+  .legacy-site-page:not(.wall-mode) .legacy-site-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  .legacy-site-page:not(.wall-mode) .legacy-site-map-viewport {
+    min-height: 620px !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}
+
+/* Afinado visual para la barra y tarjetas en dashboard */
+.legacy-site-page:not(.wall-mode) .legacy-site-runtime-strip {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.legacy-site-page:not(.wall-mode) .legacy-site-card {
+  border-radius: 22px;
+}
+
+/* Mantener overlays por encima del mapa base */
+.legacy-site-page:not(.wall-mode) .legacy-site-map-overlay {
+  pointer-events: none !important;
+}

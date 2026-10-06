@@ -1,0 +1,2 @@
+-- Estado de pantallas y emergencia global se persisten usando screen/screen_heartbeat y system_config.
+-- Este archivo se deja como referencia; la creación/ajuste principal se hace en runtime desde backend/app/db/schema_fixes.py y backend/app/api/routes/screens.py

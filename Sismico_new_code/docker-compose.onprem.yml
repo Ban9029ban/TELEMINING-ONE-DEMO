@@ -1,0 +1,238 @@
+services:
+  db:
+    image: postgres:15
+    container_name: dashboard_sismico_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: dashboard_sismico
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d dashboard_sismico"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: dashboard_sismico_backend
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    ports:
+      - "18000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: dashboard_sismico_frontend
+    depends_on:
+      - backend
+    ports:
+      - "15173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: dashboard_sismico_ollama
+    ports:
+      - "18134:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  sismico_poller:
+    build:
+      context: ./poll_sismico
+      dockerfile: Dockerfile
+    container_name: dashboard_sismico_poller
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      API_URL: http://backend:8000/api/sismico/polling/run
+      INTERVAL: 120
+      SITES: "diamante andesita andes_norte andes_norte_tunel_correa pilar_norte esmeralda"
+      LOG_FILE: /logs/poll_sismico.log
+      ENABLE_LEGACY_CAPTURE: "true"
+      BACKEND_BASE_URL: http://backend:8000
+      CAPTURE_ENDPOINTS_URL: http://backend:8000/api/sismico/capture/endpoints
+      CAPTURE_STORE_URL: http://backend:8000/api/sismico/capture/store
+      LEGACY_CAPTURE_INTERVAL_SECONDS: 30
+      LEGACY_CAPTURE_DURATION_MINUTES: 10080
+      LEGACY_CAPTURE_FETCH_LINKED_IMAGES: "true"
+      LEGACY_CAPTURE_SUMMARY_LOG: /logs/legacy_capture.log
+      LEGACY_CAPTURE_STARTUP_DELAY_SECONDS: 20
+      POLL_STARTUP_DELAY_SECONDS: 10
+    volumes:
+      - ./logs:/logs
+      - ./fixtures:/app/fixtures:ro
+    restart: unless-stopped
+
+  semaforo_emulator_api:
+    build: ./semaforo_emulator_api
+    container_name: semaforo_emulator_api
+    ports:
+      - "19090:8000"
+    restart: unless-stopped
+
+  front_emulador:
+    image: nginx:alpine
+    container_name: front_emulador
+    depends_on:
+      - semaforo_emulator_api
+    ports:
+      - "19091:80"
+    volumes:
+      - ./front_emulador:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+  test_backend_unit:
+    image: python:3.11-slim
+    container_name: dashboard_sismico_test_backend_unit
+    working_dir: /workspace
+    environment:
+      PYTHONPATH: /workspace/backend
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    volumes:
+      - ./backend:/workspace/backend
+      - ./tests:/workspace/tests
+      - ./logs:/workspace/logs
+      - ./artifacts:/workspace/artifacts
+    command: >
+      sh -lc "
+      pip install --no-cache-dir -r /workspace/backend/requirements.txt -r /workspace/backend/requirements-dev.txt &&
+      chmod +x /workspace/tests/scripts/run_backend_unit.sh &&
+      /workspace/tests/scripts/run_backend_unit.sh
+      "
+
+  test_backend_security:
+    image: python:3.11-slim
+    container_name: dashboard_sismico_test_backend_security
+    working_dir: /workspace
+    environment:
+      PYTHONPATH: /workspace/backend
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - ./backend:/workspace/backend
+      - ./tests:/workspace/tests
+      - ./logs:/workspace/logs
+      - ./artifacts:/workspace/artifacts
+    command: >
+      sh -lc "
+      pip install --no-cache-dir -r /workspace/backend/requirements.txt -r /workspace/backend/requirements-dev.txt &&
+      chmod +x /workspace/tests/scripts/run_backend_security.sh &&
+      /workspace/tests/scripts/run_backend_security.sh
+      "
+
+  test_frontend_build:
+    image: node:20-alpine
+    container_name: dashboard_sismico_test_frontend_build
+    working_dir: /workspace/frontend
+    depends_on:
+      frontend:
+        condition: service_started
+    volumes:
+      - ./frontend:/workspace/frontend
+      - ./tests:/workspace/tests
+      - ./logs:/workspace/logs
+      - ./artifacts:/workspace/artifacts
+    command: >
+      sh -lc "
+      chmod +x /workspace/tests/scripts/run_frontend_build.sh &&
+      /workspace/tests/scripts/run_frontend_build.sh
+      "
+
+  test_frontend_security:
+    image: node:20-alpine
+    container_name: dashboard_sismico_test_frontend_security
+    working_dir: /workspace/frontend
+    depends_on:
+      frontend:
+        condition: service_started
+    volumes:
+      - ./frontend:/workspace/frontend
+      - ./tests:/workspace/tests
+      - ./logs:/workspace/logs
+      - ./artifacts:/workspace/artifacts
+    command: >
+      sh -lc "
+      chmod +x /workspace/tests/scripts/run_frontend_security.sh &&
+      /workspace/tests/scripts/run_frontend_security.sh
+      "
+
+  test_smoke:
+    image: alpine:3.20
+    container_name: dashboard_sismico_test_smoke
+    depends_on:
+      backend:
+        condition: service_started
+      semaforo_emulator_api:
+        condition: service_started
+    working_dir: /workspace
+    volumes:
+      - ./tests:/workspace/tests
+      - ./logs:/workspace/logs
+      - ./artifacts:/workspace/artifacts
+    command: >
+      sh -lc "
+      apk add --no-cache curl &&
+      chmod +x /workspace/tests/scripts/run_smoke.sh &&
+      /workspace/tests/scripts/run_smoke.sh
+      "
+
+  test_summary:
+    image: python:3.11-slim
+    container_name: dashboard_sismico_test_summary
+    working_dir: /workspace
+    depends_on:
+      test_backend_unit:
+        condition: service_completed_successfully
+      test_backend_security:
+        condition: service_started
+      test_frontend_build:
+        condition: service_completed_successfully
+      test_frontend_security:
+        condition: service_started
+      test_smoke:
+        condition: service_completed_successfully
+    volumes:
+      - ./tests:/workspace/tests
+      - ./logs:/workspace/logs
+      - ./artifacts:/workspace/artifacts
+    command: >
+      sh -lc "
+      python /workspace/tests/tools/generate_test_summary.py | tee /workspace/logs/tests/summary.log
+      "
+
+
+volumes:
+  postgres_data:
+  ollama_data:
+

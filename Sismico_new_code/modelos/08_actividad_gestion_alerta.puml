@@ -1,0 +1,21 @@
+@startuml
+title Actividad — Gestión de alerta sísmica
+
+start
+:Leer estados de polígonos;
+:Evaluar umbrales y reglas;
+if (¿Se supera umbral?) then (sí)
+  :Crear alerta;
+  :Persistir evento;
+  if (¿Regla exige semáforo?) then (sí)
+    :Ejecutar comando seguro a PLC;
+    :Registrar resultado;
+  else (no)
+  endif
+  :Actualizar pantallas y dashboard;
+  :Notificar operadores;
+else (no)
+  :Mantener monitoreo;
+endif
+stop
+@enduml

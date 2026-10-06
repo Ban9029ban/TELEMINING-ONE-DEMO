@@ -1,0 +1,177 @@
+
+systemctl restart containerd
+systemctl restart docker
+
+
+docker compose down --rmi all --remove-orphans -v
+docker builder prune -af
+docker image prune -af
+docker container prune -f
+docker volume prune -f
+docker network prune -f
+
+git fetch origin --prune
+
+git checkout -B master origin/master
+git reset --hard origin/master
+git clean -fd
+
+git checkout -B develop origin/develop
+git reset --hard origin/develop
+git clean -fd
+
+git checkout -B staging origin/staging
+git reset --hard origin/staging
+git clean -fd
+
+git checkout master
+git status
+
+docker compose build --no-cache
+docker compose up -d
+docker compose ps
+docker compose logs -f
+
+
+Soporte.2025
+
+
+
+curl "http://localhost:18000/api/sismico/diagnostics/diamante?live_fetch=true&persist=false"
+curl "http://localhost:18000/api/sismico/diagnostics/andes_norte?live_fetch=true&persist=false"
+curl "http://localhost:18000/api/sismico/diagnostics/andesita?live_fetch=true&persist=false"
+
+curl "http://localhost:18000/api/sismico/diagnostics/andes_norte?live_fetch=true&persist=true"
+curl "http://localhost:18000/api/sismico/sites/andes_norte/state"
+
+
+sudo docker compose down --rmi all --remove-orphans -v
+sudo docker builder prune -af
+sudo docker image prune -af
+sudo docker container prune -f
+sudo docker volume prune -f
+sudo docker network prune -f
+
+sudo docker compose build --no-cache
+sudo docker compose up -d
+sudo docker compose ps
+sudo docker compose logs -f
+
+
+
+----- ramas
+
+git status
+
+git add .
+
+git commit -m "feat(app): integra mejoras mapas botones"
+
+git push origin test
+
+git branch -f master test
+git branch -f develop test
+git branch -f staging test
+git branch -f piloto_main test
+git branch -f server_main test
+
+git push origin master --force
+git push origin develop --force
+git push origin staging --force
+git push origin piloto_main --force
+git push origin server_main --force
+
+git fetch --all
+
+git log --oneline --decorate --graph --all -10
+
+
+
+ssh root@stagtm.denial.cl -p 9022
+ssh root@devtm.denial.cl -p 9022
+
+
+
+
+
+
+sudo docker exec -it dashboard_sismico_backend bash -lc '
+python3 -m pip install --no-cache-dir pymodbus &&
+PLCCTL="/app/tools/plcctl.py" &&
+echo "Usando $PLCCTL" &&
+echo "===== LEER ESTADO =====" &&
+python3 "$PLCCTL" --ip 192.168.1.10 --type delta --read M1 &&
+python3 "$PLCCTL" --ip 192.168.1.11 --type delta --read M1 &&
+python3 "$PLCCTL" --ip 192.168.1.12 --type delta --read M1 &&
+echo "===== ENCENDER =====" &&
+python3 "$PLCCTL" --ip 192.168.1.10 --type delta --write M1=1 &&
+python3 "$PLCCTL" --ip 192.168.1.11 --type delta --write M1=1 &&
+python3 "$PLCCTL" --ip 192.168.1.12 --type delta --write M1=1 &&
+echo "===== APAGAR =====" &&
+python3 "$PLCCTL" --ip 192.168.1.10 --type delta --write M1=0 &&
+python3 "$PLCCTL" --ip 192.168.1.11 --type delta --write M1=0 &&
+python3 "$PLCCTL" --ip 192.168.1.12 --type delta --write M1=0 &&
+echo "===== PULSO =====" &&
+python3 "$PLCCTL" --ip 192.168.1.10 --type delta --pulse M1 &&
+python3 "$PLCCTL" --ip 192.168.1.11 --type delta --pulse M1 &&
+python3 "$PLCCTL" --ip 192.168.1.12 --type delta --pulse M1
+'
+
+
+
+
+
+
+
+
+sudo docker exec -it dashboard_sismico_backend bash -lc '
+python3 -m pip install --no-cache-dir pymodbus &&
+PLCCTL="/app/tools/plcctl.py" &&
+echo "Usando $PLCCTL" &&
+for i in $(seq 1 10); do
+  echo "==== PLC .10 M${i} ON ===="
+  python3 "$PLCCTL" --ip 192.168.1.10 --type delta --write "M${i}=1"
+  sleep 1
+  echo "==== PLC .10 M${i} OFF ===="
+  python3 "$PLCCTL" --ip 192.168.1.10 --type delta --write "M${i}=0"
+  sleep 1
+done
+'
+
+
+
+
+
+
+
+sudo docker exec -it dashboard_sismico_backend bash -lc '
+python3 -m pip install --no-cache-dir pymodbus &&
+PLCCTL="/app/tools/plcctl.py" &&
+echo "Usando $PLCCTL" &&
+for ip in 192.168.1.10 192.168.1.11 192.168.1.12; do
+  for i in $(seq 1 10); do
+    echo "==== PLC ${ip} M${i} ON ===="
+    python3 "$PLCCTL" --ip "$ip" --type delta --write "M${i}=1"
+    sleep 1
+    echo "==== PLC ${ip} M${i} OFF ===="
+    python3 "$PLCCTL" --ip "$ip" --type delta --write "M${i}=0"
+    sleep 1
+  done
+done
+'
+
+
+sudo systemctl stop openvpn-client@client
+sudo systemctl disable openvpn-client@client
+sudo ip link delete tun0
+ip route
+docker compose restart
+ip a
+sudo ip route add 10.18.18.83 dev eno3
+sudo ip route add 10.18.18.83 via 10.18.18.1 dev eno3
+ip route get 10.18.18.83
+curl http://10.18.18.83:8001/hdis1/resumen/
+sudo nano /etc/sysconfig/network-scripts/route-eno3-----10.18.18.83 via 10.18.18.1 dev eno3
+
+sudo systemctl restart NetworkManager
+docker compose restart

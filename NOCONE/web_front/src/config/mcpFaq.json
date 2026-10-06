@@ -1,0 +1,162 @@
+{
+  "groups": [
+    {
+      "id": "monitoreo",
+      "label": "Monitoreo",
+      "hint": "Lectura rápida del estado actual por sitio, zona y presencia.",
+      "items": [
+        {
+          "id": "resumen_operativo_hoy",
+          "text": "Dame un resumen operativo del estado actual del sistema.",
+          "description": "Sintetiza presencia, contexto y focos visibles del momento.",
+          "mode": "analisis"
+        },
+        {
+          "id": "personas_vehiculos_dentro",
+          "text": "Muéstrame las personas y vehículos que están dentro actualmente.",
+          "description": "Consulta operativa de ubicación actual en modo solo lectura.",
+          "mode": "datos"
+        },
+        {
+          "id": "estado_porticos_hoy",
+          "text": "Cómo están los pórticos y zonas visibles hoy.",
+          "description": "Resume actividad, flujo y últimas lecturas disponibles.",
+          "mode": "analisis"
+        }
+      ]
+    },
+    {
+      "id": "alertas",
+      "label": "Alertas",
+      "hint": "Preguntas orientadas a riesgo, desvío y foco preventivo.",
+      "items": [
+        {
+          "id": "riesgos_visibles_ahora",
+          "text": "Cuáles son los principales riesgos operativos visibles ahora mismo.",
+          "description": "Prioriza alertas, zonas sensibles y posibles impactos.",
+          "mode": "analisis"
+        },
+        {
+          "id": "clima_fuera_norma",
+          "text": "Resume condiciones climáticas o ambientales fuera de norma visibles hoy.",
+          "description": "Busca focos asociados a clima y los explica en lenguaje simple.",
+          "mode": "analisis"
+        },
+        {
+          "id": "riesgo_por_zona",
+          "text": "Explícame qué zonas debería revisar primero y por qué.",
+          "description": "Entrega una lectura guiada y accionable para el turno.",
+          "mode": "analisis"
+        }
+      ]
+    },
+    {
+      "id": "control",
+      "label": "Control",
+      "hint": "Seguimiento operativo, validación y apoyo a decisiones del turno.",
+      "items": [
+        {
+          "id": "acciones_rapidas",
+          "text": "Sugiere acciones operativas rápidas según el estado actual del sistema.",
+          "description": "Entrega recomendaciones concretas y priorizadas.",
+          "mode": "analisis"
+        },
+        {
+          "id": "validar_inconsistencias",
+          "text": "Detecta posibles incoherencias operativas o de datos visibles en la demo.",
+          "description": "Busca duplicidades, movimientos raros o vacíos de información.",
+          "mode": "analisis"
+        },
+        {
+          "id": "comparar_sitio_zona",
+          "text": "Compara el estado entre sitios o zonas y destaca diferencias relevantes.",
+          "description": "Ayuda a decidir dónde enfocar supervisión.",
+          "mode": "analisis"
+        }
+      ]
+    },
+    {
+      "id": "datos_operacionales",
+      "label": "Datos",
+      "hint": "Consultas guiadas a la base de datos con salida clara y exportable.",
+      "items": [
+        {
+          "id": "personas_por_empresa",
+          "text": "Lístame las personas activas por empresa y cargo.",
+          "description": "Consulta estructurada para RRHH operativo y control.",
+          "mode": "datos"
+        },
+        {
+          "id": "accesos_portico_7_dias",
+          "text": "Muéstrame cuántos accesos tuvo cada pórtico en los últimos 7 días.",
+          "description": "Entrega tabla y gráfico cuando haya datos suficientes.",
+          "mode": "datos"
+        },
+        {
+          "id": "ranking_permanencia",
+          "text": "Entrégame el ranking de permanencia de personas según la última posición registrada.",
+          "description": "Consulta de permanencia útil para supervisión diaria.",
+          "mode": "datos"
+        },
+        {
+          "id": "vehiculos_actuales",
+          "text": "Lístame los vehículos visibles actualmente con su zona y última lectura.",
+          "description": "Consulta actual de ubicación vehicular.",
+          "mode": "datos"
+        }
+      ]
+    },
+    {
+      "id": "analisis_ia",
+      "label": "Análisis IA",
+      "hint": "Interpretación, explicaciones y guía estilo asistente conversacional.",
+      "items": [
+        {
+          "id": "explicar_simple",
+          "text": "Explícame en lenguaje simple qué está pasando y qué debería mirar primero.",
+          "description": "Ideal para un resumen ejecutivo de turno.",
+          "mode": "analisis"
+        },
+        {
+          "id": "kpis_recomendados",
+          "text": "Propone KPIs operativos utiles usando los datos disponibles en TM One.",
+          "description": "Sugiere indicadores aplicables a monitoreo y control.",
+          "mode": "analisis"
+        },
+        {
+          "id": "pregunta_guiada",
+          "text": "Hazme una pregunta guiada para construir una consulta más precisa.",
+          "description": "El agente responde pidiendo contexto adicional y sugiriendo rutas.",
+          "mode": "ayuda"
+        }
+      ]
+    },
+    {
+      "id": "ayuda",
+      "label": "Ayuda",
+      "hint": "Capacidades del agente, modelo de datos y glosario operativo.",
+      "items": [
+        {
+          "id": "catalogo_datos",
+          "text": "Qué información puedes consultar de la base de datos de forma segura.",
+          "description": "Describe tablas, campos visibles y restricciones del agente.",
+          "mode": "ayuda",
+          "action": "catalog"
+        },
+        {
+          "id": "diccionario_mineria",
+          "text": "Muéstrame el diccionario de minería y sinónimos que entiende el agente.",
+          "description": "Ayuda a formular preguntas con mejor contexto de faena.",
+          "mode": "ayuda",
+          "action": "facts"
+        },
+        {
+          "id": "como_usarte",
+          "text": "Explícame cómo preguntarte mejor para obtener respuestas más útiles.",
+          "description": "Buenas prácticas para sacarle provecho al agente.",
+          "mode": "ayuda"
+        }
+      ]
+    }
+  ]
+}

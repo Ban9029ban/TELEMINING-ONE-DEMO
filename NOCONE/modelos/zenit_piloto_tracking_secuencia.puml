@@ -1,0 +1,55 @@
+@startuml
+title Piloto Tracking RFID por LoRa - Secuencia de lectura
+autonumber
+actor Operador
+participant "Tag Felipe" as Tag
+participant "GAO\n192.168.100.50" as GAO
+participant "ESP32 Sender" as Sender
+participant "Red LoRa\n433 MHz" as LoRa
+participant "ESP32 Receiver" as Receiver
+participant "Listener\nTCP :7070" as Listener
+participant "Backend\n/listener/tag-rfid" as Backend
+database PostgreSQL as DB
+participant "Web Tracking / Flota" as Web
+
+== Preparacion ==
+Receiver -> Listener : RCV_HEARTBEAT|...|TMONE_TTE_SENDER_001|...|192.168.100.10:7070
+Listener --> Receiver : Conexion registrada
+
+== Lectura autorizada ==
+Operador -> Tag : Acerca al reader
+Tag -> GAO : EPC 000000000000000000112630
+GAO -> Sender : Evento RFID antenna 1
+Sender -> Sender : Compone RFID|epc|ts|reader|host|antena|...
+Sender -> LoRa : Envia trama RFID
+LoRa -> Receiver : Recibe trama
+Receiver -> Listener : TCP RFID|...
+Listener -> Listener : Valida y monitorea trama
+Listener -> Backend : POST evento RFID
+Backend -> DB : Resuelve gateway y portico
+Backend -> DB : UPSERT portico_communication
+Backend -> DB : Busca tag y asignacion activa
+DB --> Backend : Felipe autorizado
+Backend -> DB : INSERT access_event RFID_UHF
+Backend --> Listener : stored=true, portico=Rampa NP
+Listener --> Receiver : Evento registrado
+Web -> Backend : GET mapas y flota
+Backend -> DB : Consulta ultimo evento y comunicacion
+DB --> Backend : Datos actuales
+Backend --> Web : Portico online y Felipe en Rampa NP
+
+== EPC no autorizado ==
+GAO -> Sender : EPC sin asignacion
+Sender -> LoRa : Trama RFID
+LoRa -> Receiver : Trama RFID
+Receiver -> Listener : TCP RFID|...
+Listener -> Backend : POST evento RFID
+Backend -> DB : UPSERT portico_communication
+Backend -> DB : Busca tag/asignacion
+DB --> Backend : No autorizado
+Backend --> Listener : stored=false, ignored=true
+note right of Backend
+No se crea access_event.
+El pórtico permanece comunicado.
+end note
+@enduml

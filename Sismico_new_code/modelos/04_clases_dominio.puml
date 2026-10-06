@@ -1,0 +1,138 @@
+@startuml
+title Modelo de clases de dominio
+
+class Organization {
+  +id: UUID
+  +name: string
+  +code: string
+  +is_active: bool
+}
+
+class User {
+  +id: UUID
+  +email: string
+  +full_name: string
+  +password_hash: string
+  +is_active: bool
+}
+
+class Role {
+  +id: UUID
+  +name: string
+}
+
+class Site {
+  +id: UUID
+  +organization_id: UUID
+  +name: string
+  +code: string
+  +status: string
+}
+
+class SiteMap {
+  +id: UUID
+  +site_id: UUID
+  +name: string
+  +image_url: string
+  +width: int
+  +height: int
+}
+
+class Polygon {
+  +id: UUID
+  +map_id: UUID
+  +name: string
+  +code: string
+  +category: string
+  +default_state: string
+}
+
+class PolygonState {
+  +id: UUID
+  +polygon_id: UUID
+  +state: string
+  +source: string
+  +measured_at: datetime
+}
+
+class AlertRule {
+  +id: UUID
+  +site_id: UUID
+  +name: string
+  +severity: string
+  +trigger_condition: json
+  +is_enabled: bool
+}
+
+class AlertEvent {
+  +id: UUID
+  +site_id: UUID
+  +rule_id: UUID
+  +severity: string
+  +status: string
+  +triggered_at: datetime
+}
+
+class SemaphoreCommand {
+  +id: UUID
+  +alert_event_id: UUID
+  +target_ip: string
+  +action: string
+  +executed_at: datetime
+  +result_status: string
+}
+
+class RemoteEndpoint {
+  +id: UUID
+  +site_id: UUID
+  +name: string
+  +endpoint_url: string
+  +kind: string
+  +poll_interval_sec: int
+}
+
+class Screen {
+  +id: UUID
+  +site_id: UUID
+  +name: string
+  +screen_code: string
+  +target_url: string
+}
+
+class ScreenHeartbeat {
+  +id: UUID
+  +screen_id: UUID
+  +browser_session_id: string
+  +status_code: string
+  +sent_at: datetime
+}
+
+class AiFaq {
+  +id: UUID
+  +question: string
+  +answer: text
+  +sort_order: int
+}
+
+class AiPromptLog {
+  +id: UUID
+  +user_id: UUID
+  +prompt: text
+  +response: text
+  +created_at: datetime
+}
+
+Organization "1" -- "*" Site
+Organization "1" -- "*" User
+User "*" -- "*" Role
+Site "1" -- "*" SiteMap
+SiteMap "1" -- "*" Polygon
+Polygon "1" -- "*" PolygonState
+Site "1" -- "*" AlertRule
+AlertRule "1" -- "*" AlertEvent
+AlertEvent "1" -- "*" SemaphoreCommand
+Site "1" -- "*" RemoteEndpoint
+Site "1" -- "*" Screen
+Screen "1" -- "*" ScreenHeartbeat
+User "1" -- "*" AiPromptLog
+@enduml

@@ -1,0 +1,40 @@
+@startuml
+title Despliegue IT ZENIT Tag Listener (On-Prem + Cloud)
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam linetype ortho
+
+
+node "Servidor Local Mina\nLinux" as localhost {
+node "Servidor Local Mina\nLinux" as tmone.denial.cl {
+  node "Docker Engine" as LocalDocker {
+    component "zenit-listener\n(TCP + GUI)" as LocalListener
+    component "backend-api\n(REST/gRPC)" as LocalBackend
+    database "PostgreSQL\nBD ZENIT Local" as LocalDB
+  }
+}
+
+node "Servidor Cloud\nAWS / GCP\nLinux" as CloudHost {
+  node "Docker Engine" as CloudDocker {
+    component "zenit-listener\n(TCP + GUI)" as CloudListener
+    component "backend-api\n(REST/gRPC)" as CloudBackend
+    database "PostgreSQL\nBD ZENIT Cloud" as CloudDB
+  }
+}
+
+cloud "Backbone Mina / RPi\n(cable radiante)" as BackboneNet
+cloud "Red IP\nLAN / Internet" as IpNet
+
+BackboneNet --> IpNet : TCP 7070\ntramas tag
+IpNet --> LocalListener : opcion On-Prem
+IpNet --> CloudListener : opcion Cloud
+
+LocalListener --> LocalBackend : HTTP/REST\npuerto 8000
+CloudListener --> CloudBackend : HTTP/REST\npuerto 8000
+
+LocalBackend --> LocalDB : PostgreSQL 5432
+CloudBackend --> CloudDB : PostgreSQL 5432
+
+@enduml

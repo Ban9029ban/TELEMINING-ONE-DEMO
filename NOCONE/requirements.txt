@@ -1,0 +1,20 @@
+# --- Núcleo servidor / backend ---
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+pydantic-settings==2.5.2
+SQLAlchemy==2.0.36
+asyncpg==0.29.0
+psycopg[binary]==3.2.3
+orjson==3.10.7
+ujson==5.10.0
+
+# --- CLI / simulador ---
+rich==13.8.1
+PyYAML==6.0.2
+aiohttp==3.10.5
+
+# --- GUI del escuchador ---
+PyQt5==5.15.11
+psutil==6.0.0
+requests==2.32.3

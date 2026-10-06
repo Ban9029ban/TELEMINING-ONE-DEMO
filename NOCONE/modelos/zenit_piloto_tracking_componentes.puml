@@ -1,0 +1,34 @@
+@startuml
+title Piloto Tracking RFID por LoRa - Arquitectura de componentes
+left to right direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "Operador" as operator
+component "Tag RFID UHF\nEPC 000000000000000000112630" as tag
+component "Reader GAO\n192.168.100.50\nAntena 1" as gao
+component "ESP32 Sender\nTMONE_TTE_SENDER_001\n192.168.100.51:7071" as sender
+cloud "LoRa 433 MHz\nPAIR_ID=0001" as lora
+component "ESP32 Receiver\nTMONE_TTE_RECEIVER_001\n192.168.100.53" as receiver
+component "ZENIT Listener\nMonitor HTTP :8080\nIngesta TCP :7070" as listener
+component "Backend FastAPI\nPOST /listener/tag-rfid\nGET /control/maps/*" as backend
+database "PostgreSQL\naccess_event\nportico_communication\ntag_assignment" as db
+component "Aplicacion Web\nTracking y Flota\n:8081" as web
+
+operator --> tag : porta
+tag --> gao : lectura RFID
+gao --> sender : stream o webhook HTTP
+sender --> lora : trama RFID compacta
+lora --> receiver : radio
+receiver --> listener : TCP RFID|...\n+heartbeat
+listener --> backend : HTTP JSON
+backend --> db : consulta y persistencia
+web --> backend : API de mapas y flota
+operator --> web : consulta ubicacion
+
+note bottom of backend
+EPC autorizado: crea access_event.
+Todo EPC recibido en portico configurado:
+actualiza portico_communication.
+end note
+@enduml

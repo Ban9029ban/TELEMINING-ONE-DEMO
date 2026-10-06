@@ -1,0 +1,30 @@
+@startuml
+title Arquitectura del Sistema Sísmico Antiguo (Legacy)
+
+package "Frontend Legacy" {
+  [HTML estático]
+  [JavaScript embebido]
+}
+
+package "Backend Scripts" {
+  [Scripts JS]
+  [Scripts Node]
+}
+
+component "Script PLC semáforos"
+component "Fuentes sísmicas externas"
+component "Pantallas de monitoreo"
+
+[HTML estático] --> [Scripts JS]
+[Scripts JS] --> "Script PLC semáforos"
+[Scripts JS] --> "Fuentes sísmicas externas"
+"Pantallas de monitoreo" --> [HTML estático]
+
+note right
+Problemas del sistema legacy:
+- Arquitectura monolítica
+- Sin control de versiones formal
+- Escalabilidad limitada
+- Baja seguridad
+end note
+@enduml

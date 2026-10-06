@@ -1,0 +1,2776 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.4.0",
+    "title": "Impinj Reader Configuration REST API",
+    "description": "This API provides an interface for configuring RFID operations and reporting\nstreams on Impinj Readers as well as updating Impinj Reader firmware and\nconfiguring system settings.\n\nNotes: All system configuration endpoints require basic authentication and can\nonly be accessed over HTTPS. This requirement ensures that only authorized users\ncan make system configuration changes and authentication credentials are not\ntransmitted over an unsecured channel. HTTPS is disabled by default for compatibility\nreasons so the system configuration endpoints are not accessible until HTTPS is enabled\nvia the rshell interface. These default settings may be changed in the next major release.\n\nSystem configuration endpoints are those starting with the system prefix (/api/v1/system).\n\nWith HTTPS and the Impinj IoT Interface enabled, the entire REST API can be securely\naccessed using HTTPS. Impinj recommends configuring the reader to disable HTTP and enable\nHTTPS and basic authentication. This is the most secure way to use the Impinj Reader\nConfiguration REST API.\n\nPlease consult the rshell documentation for instructions on how to enable HTTPS and basic\nauthentication.\n",
+    "contact": {
+      "name": "Impinj Developer Platform",
+      "url": "https://platform.impinj.com",
+      "email": "developer-feedback@impinj.com"
+    }
+  },
+  "basePath": "/api/v1",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "securityDefinitions": {
+    "basic": {
+      "type": "basic",
+      "description": "HTTP Basic Authentication."
+    }
+  },
+  "security": [
+    {
+      "basic": []
+    }
+  ],
+  "paths": {
+    "/data/stream": {
+      "get": {
+        "summary": "Get HTTP stream",
+        "description": "Get reader event data as an HTTP stream\n\n**Connecting**\n\nTo connect to the reader, form an HTTP request and consume the resulting stream for as long as is practical.\nThe reader will hold the connection open indefinitely, barring reader error, excessive client-side lag,\nnetwork hiccups, reader maintenance or duplicate logins. In the event there is no new data to stream for\n30 seconds or more, a keep-alive CR-LF character pair will be sent every 30 seconds.\n\nThe method to form an HTTP request and parse the response will be different for every language or\nframework, so consult the documentation for the HTTP library you are using.\n\nSome HTTP client libraries only return the response body after the connection has been closed by the server.\nThese clients will not work for accessing data via HTTP streaming. You must use an HTTP client that will return\nresponse data incrementally. Most robust HTTP client libraries will provide this functionality. The Apache\nHttpClient will handle this use case, for example.\n\n**Disconnections**\n\nThe reader will close a streaming connection for the following reasons:\n - A client establishes too many connections with the same credentials. When this occurs, the oldest connection will be terminated.\n - A client stops reading data suddenly. If the rate of tag reports being read off of the stream drops suddenly, the connection will be closed.\n - A client reads data too slowly. Every streaming connection is backed by a queue of messages to be sent to the client. If this queue grows too large over time, the connection will be closed.\n - The reader is rebooted.\n\n **Stalls**\n\n Set a timer, either a 90 second TCP level socket timeout, or a 90 second application level timer on the receipt\n of new data. If 90 seconds pass with no data received, including newlines, disconnect and reconnect immediately.\n The Streaming API will send a keep-alive newline every 30 seconds to prevent your application from timing out the\n connection. You should wait at least 3 cycles to prevent spurious reconnects in the event of network congestion,\n local CPU starvation, local GC pauses, etc.\n",
+        "responses": {
+          "200": {
+            "description": "OK. HTTP stream of events will be sent.",
+            "schema": {
+              "$ref": "#/definitions/ReaderEvent"
+            }
+          },
+          "404": {
+            "description": "Streaming output has not been enabled on this reader.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "An internal error occurred.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "summary": "Retrieve status",
+        "description": "Retrieves the reader's current status.\nThis endpoint allow's a user to query what the reader is actively working on, if anything. The information\ncontained here will indicate the last request the reader responded to that resulted in it taking some modem\naction, such as starting or stopping inventory. Configuration API calls are not included.\n",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/ReaderStatus"
+            }
+          }
+        }
+      }
+    },
+    "/http-stream": {
+      "get": {
+        "summary": "Retrieve HTTP stream settings",
+        "description": "Retrieves the configuration settings that apply to all HTTP streams.",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/StreamConfiguration"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update HTTP stream settings",
+        "description": "Updates the HTTP stream settings that apply to all HTTP streams.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "updatedStreamConfiguration",
+            "description": "The HTTP stream configuration settings",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StreamConfiguration"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content. The HTTP stream settings were updated successfully."
+          },
+          "400": {
+            "description": "Bad request. The request body contained a request the server could not understand.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/mqtt": {
+      "get": {
+        "summary": "Retrieve MQTT settings",
+        "description": "Retrieves the current MQTT configuration settings for publishing data to an MQTT broker.",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/MqttConfiguration"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update MQTT settings",
+        "description": "Updates the MQTT settings used by the device.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "updatedMqttConfiguration",
+            "description": "The fully defined MQTT configuration settings the device should use when publishing data to an MQTT broker.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MqttConfiguration"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content. The MQTT settings were updated successfully."
+          },
+          "400": {
+            "description": "Bad request. The request body contained an MQTT configuration object the server could not understand.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/kafka": {
+      "get": {
+        "summary": "Retrieve Kafka settings",
+        "description": "Retrieves the current Kafka configuration settings for pushing messages to a Kafka broker.",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/KafkaConfiguration"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Kafka settings",
+        "description": "Updates the Kafka settings used by the device.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "updatedKafkaConfiguration",
+            "description": "The fully defined Kafka configuration settings the device should use when pushing messages to a Kafka broker.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/KafkaConfiguration"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content. The Kafka settings were updated successfully."
+          },
+          "400": {
+            "description": "Bad request. The request body contained a Kafka configuration object the server could not understand.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/profiles": {
+      "get": {
+        "summary": "Retrieve profiles",
+        "description": "Retrieves the profiles (e.g. inventory, location, and direction) supported by this reader.",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/stop": {
+      "post": {
+        "summary": "Stop preset",
+        "description": "Stops the currently running profile preset.\nIf no preset is currently running, this is a no-op.\n",
+        "responses": {
+          "204": {
+            "description": "No Content."
+          }
+        }
+      }
+    },
+    "/profiles/inventory/presets-schema": {
+      "get": {
+        "summary": "Retrieve inventory schema",
+        "description": "Retrieves the reader-specific JSON schema used to validate inventory presets.\nThis is a good way to determine reader capabilities such as max transmit power or available RF modes.\n",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/PresetsSchema"
+            }
+          },
+          "500": {
+            "description": "An internal error occurred.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/inventory/presets": {
+      "get": {
+        "summary": "Retrieve inventory presets",
+        "description": "Retrieves the available presets for running inventory.",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PresetId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profiles/inventory/presets/{presetId}": {
+      "get": {
+        "summary": "Retrieve inventory preset detail",
+        "description": "Retrieves the detailed configuration of the specified preset.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/PresetId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/InventoryRequest"
+            }
+          },
+          "404": {
+            "description": "Not found. The specified preset was not found on the system.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Create or replace inventory preset",
+        "description": "Creates or replaces a user-defined inventory preset.  Presets with names\nthat begin with 'default' or 'impinj' may not be created or replaced.\n",
+        "parameters": [
+          {
+            "$ref": "#/parameters/PutPresetId"
+          },
+          {
+            "in": "body",
+            "name": "presetObject",
+            "description": "The value of the preset you wish to create or replace.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InventoryRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created. The preset was successfully created.",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "204": {
+            "description": "No Content. The preset was successfully replaced."
+          },
+          "400": {
+            "description": "Bad Request. The request body contained an inventory preset the server could not understand.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "403": {
+            "description": "Forbidden. Cannot create or replace preset with id starting with default or impinj.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict. The preset is running.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete inventory preset",
+        "description": "Removes a user-defined settings preset for executing inventory.",
+        "parameters": [
+          {
+            "$ref": "#/parameters/PresetId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content. The preset was deleted from the reader."
+          },
+          "403": {
+            "description": "Forbidden. This preset is provided by the reader and cannot be deleted.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not found. An inventory preset with the specified id could not be found.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict. The preset is running.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/inventory/presets/{presetId}/start": {
+      "post": {
+        "summary": "Start inventory preset",
+        "description": "Starts running the specified inventory preset. The running preset cannot be\nreplaced or deleted. The preset will be automatically restarted if the reader\nreboots. If the reader is restarted multiple times in quick succcession the\nsaved preset may be stopped to prevent the bad preset from blocking access to\nthe rest interface. If this occurs an ERROR level message will be logged.\n",
+        "parameters": [
+          {
+            "$ref": "#/parameters/PresetId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content. The preset was started."
+          },
+          "400": {
+            "description": "Bad request. The inventory request could not be successfully parsed.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not found. The specified preset was not found on the system.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict. Another reader operation is currently running on the reader.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/inventory/tag": {
+      "get": {
+        "summary": "Checks for the presence of a tag in the field of view of an antenna.",
+        "description": "Returns information on whether the specified tag was seen on the specified antenna in the\ntag reporting interval. Available only if TagReportingConfiguration feature is enabled.\nMust specify exactly one tag identifier and one antenna identifier.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "epc",
+            "type": "string",
+            "format": "Base64Url-Encoding",
+            "description": "The base64url-encoded EPC of the tag of interest."
+          },
+          {
+            "in": "query",
+            "name": "epcHex",
+            "type": "string",
+            "pattern": "^[0-9A-F]+$",
+            "description": "The hex-encoded EPC of the tag of interest."
+          },
+          {
+            "in": "query",
+            "name": "tid",
+            "type": "string",
+            "format": "Base64Url-Encoding",
+            "description": "The base64url-encoded TID of the tag of interest."
+          },
+          {
+            "in": "query",
+            "name": "tidHex",
+            "type": "string",
+            "pattern": "^[0-9A-F]+$",
+            "description": "The hex-encoded TID of the tag of interest."
+          },
+          {
+            "in": "query",
+            "name": "antennaPort",
+            "type": "integer",
+            "minimum": 1,
+            "description": "The port number of the antenna for the tag of interest."
+          },
+          {
+            "in": "query",
+            "name": "antennaName",
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "maxLength": 64,
+            "description": "Name for the antenna for the tag of interest."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tag presence information.",
+            "schema": {
+              "$ref": "#/definitions/TagPresenceResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request. Malformed request, does not contain exactly one tag identifier and one\nantenna identifier.\n",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not found. Tag presence information not available. Either the tag reporting feature is not\nenabled or the tag and antenna identifiers used do not match the reporting configuration.\n"
+          }
+        }
+      }
+    },
+    "/system": {
+      "get": {
+        "summary": "Retrieve details about the reader hardware.",
+        "description": "Retrieve details about the reader hardware.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/SystemInfo"
+            }
+          }
+        }
+      }
+    },
+    "/system/hostname": {
+      "get": {
+        "summary": "Retrieve the reader hostname.",
+        "description": "Retrieves the current hostname of the reader. Note that this is not a fully qualified domain name.\n",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Hostname"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update the reader hostname.",
+        "description": "Updates the reader hostname to the specified value.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "hostname",
+            "description": "The new hostname to be set for the reader. The hostname must conform with RFC-952 and RFC-1123.\n",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Hostname"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content. The reader's hostname was successfully updated."
+          },
+          "400": {
+            "description": "Bad Request. The request body contained an invalid hostname.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/image": {
+      "get": {
+        "summary": "Retrieve details about the reader's firmware.",
+        "description": "A successful `GET` request to this endpoint will return detailed information about the\nfirmware installed on the reader. Properties are omitted for uninstalled or unavailable\npartitions.\n",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/SystemImage"
+            }
+          }
+        }
+      }
+    },
+    "/system/image/upgrade": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "summary": "Upload an upgrade file for installation.",
+        "description": "In order to perform an upgrade, the upgrade file must be uploaded to the reader using this\nendpoint. Upon successfully uploading an upgrade file to the reader, the reader will\nacknowledge receipt of the upgrade file by issuing a `202: Accepted` response.\n\nFollowing such a response, the client can visit the status URL for the current state of\nthe upgrade operation.\n\nOnce an upgrade file has completed transfer with this endpoint, subsequent requests will\nreceive a response of `409: Conflict` until one of the following conditions is met:\n\n- The upgrade was successfully installed, and the reader is awaiting reboot.\n- The upgrade failed to install.\n\nIf an upgrade has been installed, but the reader has not yet been rebooted, a different\nupgrade file can be installed over the previous upgrade.\n\nAny successfully installed upgrade will take effect the next time the reader is booted.\n",
+        "parameters": [
+          {
+            "in": "formData",
+            "name": "upgradeFile",
+            "type": "file",
+            "description": "The upgrade file to be installed on the reader.",
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted. The image file was uploaded successfully and is being installed on the reader."
+          },
+          "409": {
+            "description": "Conflict. Another upgrade operation is currently running on the reader.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "413": {
+            "description": "Payload Too Large. The reader rejected the file because its filesize is too large."
+          },
+          "415": {
+            "description": "Unsupported Media Type. Data provided was not in multipart/form-data format and could not be parsed.\n"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get details about the state of a firmware upgrade.",
+        "description": "The state of any upgrades occurring on the reader can be monitored from this endpoint.\n\nNote that once an upgrade has reached the `successful` state, it will take effect the next\ntime the reader is booted. The user must trigger the reboot as the reader won't reboot on\nits own.\n",
+        "responses": {
+          "200": {
+            "description": "OK. Information about the state of any firmware upgrades will be in the provided upgrade status object.",
+            "schema": {
+              "$ref": "#/definitions/UpgradeStatus"
+            }
+          }
+        }
+      }
+    },
+    "/system/network/interfaces": {
+      "get": {
+        "summary": "Retrieve the current network information for all interfaces.",
+        "description": "Retrieves the available network interfaces and their current network information.\n",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/NetworkInterface"
+              },
+              "maxItems": 5
+            }
+          }
+        }
+      }
+    },
+    "/system/network/interfaces/{interfaceId}/{networkProtocol}/configuration": {
+      "get": {
+        "summary": "Retrieve the current configuration of a network interface.",
+        "description": "Retrieves the current IPv4 or IPv6 configuration of the specified interface.\nThe `networkProtocol` parameter indicates a specific Network Protocol version of the\nconfiguration to retrieve.\n",
+        "parameters": [
+          {
+            "$ref": "#/parameters/InterfaceId"
+          },
+          {
+            "$ref": "#/parameters/NetworkProtocol"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/IpConfiguration"
+            }
+          },
+          "404": {
+            "description": "Not found. The specified network interface or protocol could not be found.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update the IP configuration of a network interface.",
+        "description": "Updates IPv4 or IPv6 configuration for the specified interface. This endpoint\ncould be used to change the addressing mode between dynamic and static as well as\nsetting the static IP address, prefix length, and gateway.\n",
+        "parameters": [
+          {
+            "$ref": "#/parameters/InterfaceId"
+          },
+          {
+            "$ref": "#/parameters/NetworkProtocol"
+          },
+          {
+            "in": "body",
+            "name": "ipConfiguration",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/IpConfiguration"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted. The IP configuration for the interface was updated successfully.\nSystem reboot is required for the new configuration to take effect.\n",
+            "schema": {
+              "$ref": "#/definitions/StatusResponse"
+            }
+          },
+          "404": {
+            "description": "Not found. The specified network interface or protocol could not be found.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request. The request body contained a request the server could not understand.\n",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/power": {
+      "get": {
+        "summary": "Retrieve the current power configuration.",
+        "description": "Retrieves the current power configuration on the reader.",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/PowerConfiguration"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Configure the power source.",
+        "description": "Configures the power source to the specified value for the reader.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "powerSource",
+            "description": "The power source to be configured for the reader.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "powerSource": {
+                  "$ref": "#/definitions/PowerSource"
+                }
+              },
+              "required": [
+                "powerSource"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted. System reboot is required for the new configuration to take effect.",
+            "schema": {
+              "$ref": "#/definitions/StatusResponse"
+            }
+          },
+          "204": {
+            "description": "No Content. The provided power source was already configured on the reader."
+          },
+          "400": {
+            "description": "Bad Request. The request body contained invalid power configuration settings.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/region": {
+      "get": {
+        "summary": "Retrieve region information.",
+        "description": "Retrieves the current operating region and a list of selectable regions for the reader.\n",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/RegionInfo"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Configure the operating region.",
+        "description": "Configures the reader operating region to the specified region. This operation changes the reader\nRF settings. The operating region must match the country/region of operation to comply with local laws\nand regulations.\n",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "operatingRegion",
+            "description": "The operating region to be configured for the reader.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "operatingRegion": {
+                  "$ref": "#/definitions/OperatingRegion"
+                }
+              },
+              "required": [
+                "operatingRegion"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted. System reboot is required for the new configuration to take effect.",
+            "schema": {
+              "$ref": "#/definitions/StatusResponse"
+            }
+          },
+          "204": {
+            "description": "No Content. The provided region was already configured on the reader."
+          },
+          "400": {
+            "description": "Bad Request. The request body contained an invalid operating region or format\nthat does not match the expected schema.\n",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/reboot": {
+      "post": {
+        "summary": "Reboot the system.",
+        "description": "A call to this endpoint will cause the system to reboot. Once this request is issued, subsequent calls to\nany endpoint will fail until the system is again available to service requests.\n\nIf an upgrade has been installed on the system, the reader will boot into the newly installed firmware image.\n",
+        "responses": {
+          "202": {
+            "description": "Accepted. The system has begun the shutdown and startup process.",
+            "schema": {
+              "$ref": "#/definitions/StatusResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/rfid/llrp": {
+      "get": {
+        "summary": "Retrieve LLRP status.",
+        "description": "Retrieves the current status of the LLRP interface.",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/LlrpStatus"
+            }
+          },
+          "404": {
+            "description": "Not Found. This endpoint is only available when RFID interface is set to LLRP.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/rfid/interface": {
+      "get": {
+        "summary": "Retrieve the reader API.",
+        "description": "Retrieves the application programming interface (API) that is currently being used\nto control the reader RFID operations.\n",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/RfidInterface"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Configure the reader API.",
+        "description": "Configures the application programming interface (API) that will be used to control the\nreader RFID operations.\n",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "rfidInterface",
+            "description": "The API that will be used to control the reader RFID operations.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RfidInterface"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content. The provided interface was successfully enabled on the reader."
+          },
+          "400": {
+            "description": "Bad Request. The request body contained an invalid interface.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/time": {
+      "get": {
+        "summary": "Retrieve information about system time and uptime.",
+        "description": "Retrieves information about system time and uptime.\nSystem time is in UTC and RFC-3339 compliant format.\nUptime indicates how long the system has been running in seconds.\n",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/TimeInfo"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update the system time.",
+        "description": "Updates the system time if NTP is disabled. If NTP is enabled,\nan error is returned.\n",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "systemTime",
+            "description": "The new system time to be set in UTC and RFC-3339 format.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "systemTime": {
+                  "type": "string",
+                  "format": "date-time",
+                  "minLength": 19,
+                  "maxLength": 32,
+                  "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}:[0-9]{2}[Zz]?)$",
+                  "example": "2020-11-20T10:20:30Z"
+                }
+              },
+              "required": [
+                "systemTime"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content. The provided system time was successfully updated on the reader."
+          },
+          "400": {
+            "description": "Bad Request. The request body contained a system time that the server could not understand.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict. Manual setting of system time is not available while NTP is enabled.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/time/ntp": {
+      "get": {
+        "summary": "Retrieve the current state of the NTP service.",
+        "description": "Retrieves the current state of the NTP (Network Time Protocol) service on the reader.\nNTP service is responsible for synchronizing the system time on the reader with external\nNTP servers in order to keep the system time accurate and synchronized with other devices\non the network.\n",
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "description": "The state of NTP service on the reader.\nDisabled - the NTP service is disabled.\nSynchronized - the system time is synchronized with at least one external NTP server.\nUnsynchronized - the NTP service is enabled, but the system time is not being synchronized\nwith any NTP server. It could be that there is no NTP server available or the service\nis having an issue communicating with the NTP servers due to network issues.\n",
+                  "type": "string",
+                  "enum": [
+                    "disabled",
+                    "synchronized",
+                    "unsynchronized"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Configure the NTP service.",
+        "description": "Configures the NTP service on the reader.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "ntpConfiguration",
+            "description": "The new NTP service configuration.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NtpConfiguration"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content. The NTP service configuration was successfully updated on the reader."
+          },
+          "400": {
+            "description": "Bad Request. The request body contained a setting the server could not understand.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/time/ntp/servers": {
+      "get": {
+        "summary": "Retrieve NTP servers.",
+        "description": "Retrieves NTP servers currently being used on the reader. These servers could be either statically\nconfigured or dynamically discovered via a DHCP server.\n",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/NtpServer"
+              },
+              "maxItems": 12
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a static NTP server.",
+        "description": "Adds a static NTP server to the reader. A NTP server can be specified by either hostname\nor IP address. The newly created NTP server object is returned upon a successful completion.\nThe reader allows up to 6 static NTP servers.\n",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "ntpServer",
+            "description": "The static NTP server to add.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "type": "string",
+                  "description": "Fully qualified domain name or IP address of the NTP server. Could be either an IPv4\naddress in dot-decimal format or an IPv6 address compliant with RFC-5952.\n",
+                  "minLength": 1,
+                  "maxLength": 253
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created. The NTP server was successfully added to the reader.",
+            "schema": {
+              "$ref": "#/definitions/NtpServer"
+            }
+          },
+          "400": {
+            "description": "Bad Request. The request body was not understood by the server.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/system/time/ntp/servers/{serverId}": {
+      "get": {
+        "summary": "Retrieve details on a specific NTP server.",
+        "description": "Retrieves details on a specific NTP server.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serverId",
+            "required": true,
+            "type": "integer",
+            "description": "The unique identifier assigned to the NTP server by the reader."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "schema": {
+              "$ref": "#/definitions/NtpServerInfo"
+            }
+          },
+          "404": {
+            "description": "Not found. The NTP server with the specified ID was not found on the reader.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a static NTP server.",
+        "description": "Removes a static NTP server from the reader. Note that dynamic NTP servers connot\nbe removed. Both static and dynamic servers could be used together to improve the\nreliability and accuracy of the system time.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serverId",
+            "required": true,
+            "type": "integer",
+            "description": "The ID of the static NTP server to be removed."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK. The specified NTP server entry was removed from the reader and its info is returned in the response.\n",
+            "schema": {
+              "$ref": "#/definitions/NtpServerInfo"
+            }
+          },
+          "403": {
+            "description": "Forbidden. The server is dynamic and cannot be removed from the reader.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not found. A static NTP server with the specified ID could not be found.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "PresetId": {
+      "in": "path",
+      "name": "presetId",
+      "description": "The name of a preset.",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_.-]+$",
+      "maxLength": 128,
+      "required": true
+    },
+    "PutPresetId": {
+      "in": "path",
+      "name": "presetId",
+      "description": "The name of a preset.",
+      "type": "string",
+      "pattern": "^(?!default|impinj)[a-zA-Z0-9_.-]+$",
+      "maxLength": 128,
+      "required": true
+    },
+    "InterfaceId": {
+      "in": "path",
+      "name": "interfaceId",
+      "description": "The unique identifier of the network interface assigned by the reader.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 32,
+      "required": true
+    },
+    "NetworkProtocol": {
+      "in": "path",
+      "name": "networkProtocol",
+      "description": "The network protocol version of the configuration.",
+      "type": "string",
+      "enum": [
+        "ipv4",
+        "ipv6"
+      ],
+      "required": true
+    }
+  },
+  "definitions": {
+    "PresetId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_.-]+$",
+      "maxLength": 128,
+      "description": "The profile preset identifier."
+    },
+    "PresetsSchema": {
+      "type": "object",
+      "description": "Reader-specific JSON schema for the profile presets."
+    },
+    "Epc": {
+      "type": "string",
+      "format": "Base64Url-Encoding",
+      "description": "The base64url-encoded EPC of the tag."
+    },
+    "EpcHex": {
+      "type": "string",
+      "pattern": "^[0-9A-F]*$",
+      "description": "The hex-encoded EPC of the tag."
+    },
+    "Tid": {
+      "type": "string",
+      "format": "Base64Url-Encoding",
+      "description": "The base64url-encoded TID of the tag."
+    },
+    "TidHex": {
+      "type": "string",
+      "pattern": "^[0-9A-F]+$",
+      "description": "The hex-encoded TID of the tag."
+    },
+    "AntennaPort": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The port number of the antenna."
+    },
+    "AntennaName": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_.-]+$",
+      "maxLength": 64,
+      "description": "Name for the antenna, if set reported in all tagInventoryEvents generated by the named antenna configuration.\n"
+    },
+    "TransmitPowerCdbm": {
+      "type": "integer",
+      "multipleOf": 25,
+      "minimum": 1000,
+      "description": "The transmit power used by the reader, specified in 25 cdBm increments.\n"
+    },
+    "RfMode": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The RF mode to use while inventorying. Please refer to the reader documentation for details.\n"
+    },
+    "InventorySearchMode": {
+      "type": "string",
+      "description": "Specifies how the reader searches for tags",
+      "enum": [
+        "single-target",
+        "dual-target",
+        "single-target-with-tagfocus",
+        "single-target-b-to-a",
+        "dual-target-with-b-to-a-select"
+      ]
+    },
+    "InventorySession": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "description": "The session (0-3) to inventory the tags in."
+    },
+    "TagMemoryBank": {
+      "type": "string",
+      "description": "The different memory banks that can potentially be read from a tag.",
+      "enum": [
+        "epc",
+        "tid",
+        "user",
+        "reserved"
+      ]
+    },
+    "FastId": {
+      "description": "Specifies to enable or disable the Impinj Fast ID extension.",
+      "type": "string",
+      "enum": [
+        "disabled",
+        "enabled"
+      ],
+      "default": "disabled"
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "A message with information about the error."
+        },
+        "invalidPropertyId": {
+          "type": "string",
+          "description": "A schema pointer to the invalid property of the request."
+        },
+        "detail": {
+          "type": "string",
+          "description": "Additional details about the error."
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
+    "TagPresenceResponse": {
+      "type": "object",
+      "properties": {
+        "isPresent": {
+          "type": "boolean",
+          "description": "Whether the specified tag was seen on the specified antenna in the reporting interval."
+        }
+      }
+    },
+    "TagFilter": {
+      "description": "Identifies a subset of the tag population to match against, and whether tags that match\nthe provided criteria are included or excluded from the set.\n",
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "Specifies if tags matching the provided criteria should be included or excluded from the set.",
+          "type": "string",
+          "enum": [
+            "include",
+            "exclude"
+          ]
+        },
+        "tagMemoryBank": {
+          "description": "Specifies which memory bank on the tag is of interest.",
+          "type": "string",
+          "enum": [
+            "epc",
+            "tid",
+            "user"
+          ]
+        },
+        "bitOffset": {
+          "description": "The index into the memory bank where the mask should be applied, in bits.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "mask": {
+          "description": "The pattern to match against, specified as a hexadecimal string.",
+          "type": "string",
+          "pattern": "^[0-9A-Fa-f]+$",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "maskLength": {
+          "description": "When the desired mask's length is not divisible by four, specify how\nmuch of the provided mask should be used, in bits. This means the mask\nis left-justified.\n",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 255
+        }
+      },
+      "required": [
+        "action",
+        "tagMemoryBank",
+        "bitOffset",
+        "mask"
+      ]
+    },
+    "InventoryFilterConfiguration": {
+      "description": "When only a subset of the tag population is of interest to the client application,\nfilters can identify this subset, ensuring only tags of interest are inventoried.\n",
+      "type": "object",
+      "properties": {
+        "filters": {
+          "description": "An array of filters to be applied to the tag population.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TagFilter"
+          },
+          "minItems": 1,
+          "maxItems": 2
+        },
+        "filterLink": {
+          "description": "When multiple filters are provided, this specifies if included tags must\nmatch **any** (`union`) or **all** (`intersection`) of the provided filters.\n",
+          "type": "string",
+          "enum": [
+            "union",
+            "intersection"
+          ],
+          "default": "union"
+        }
+      },
+      "required": [
+        "filters"
+      ]
+    },
+    "TransmitPowerSweepConfiguration": {
+      "description": "In multi-reader environments, using power-sweeping can improve tag readability by reducing\nreader-to-reader interference. Each inventory round is performed repeatedly at progressively\nhigher transmit power levels, with the last inventory round using the antenna's configured\ntransmit power.\n\nFor example, if the antenna is configured with a transmit power of 3000 cdBm, and you provide\na minimum power of 2300 cdBm and a step size of 200 cdB, inventory rounds will be performed\nat the following, increasing power levels: 2400, 2600, 2800, and 3000 cdBm.\n",
+      "type": "object",
+      "properties": {
+        "minimumPowerCdbm": {
+          "description": "The minimum power at which the first inventory round  will be performed. If the difference\nbetween this value and the antenna's transmit power is not a multiple of the step size,\nthis value will be rounded up.\n\nThis value must be less than or equal to the antenna's transmit power minus the provided\nstep size.\n",
+          "type": "integer",
+          "multipleOf": 25,
+          "minimum": 0
+        },
+        "stepSizeCdb": {
+          "description": "The amount of extra power each successive inventory round should use. If the reader\ncannot precisely provide this step size, it will round to the nearest possible step size.\n",
+          "type": "integer",
+          "multipleOf": 25,
+          "minimum": 100
+        }
+      },
+      "required": [
+        "minimumPowerCdbm",
+        "stepSizeCdb"
+      ]
+    },
+    "TagAuthentication": {
+      "description": "Enables a tag authentication challenge to be sent to each tag that is inventoried.\n",
+      "type": "object",
+      "properties": {
+        "messageHex": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 12,
+          "pattern": "^(|0[0-7][0-9A-Fa-f]{10})$",
+          "description": "The challenge message to send to the authentication engine. If empty then a random challenge message\nwill be auto generated by the reader that will request the tag append the TID. If not empty\nthe message must be 48 bits (12 hex digits) that begins with a 6 bit header and is followed by a 42 bit challenge.\nThe format of the 6 bit header is two bits of auth method which must be 00, 3 bits reserved for future\nuse which must be 000, and 1 bit that when set to 1 requests the tag append the TID to the\nauthentication response.\n"
+        }
+      },
+      "required": [
+        "messageHex"
+      ]
+    },
+    "TagAuthenticationResponse": {
+      "description": "The response to an authentication challenge for the tag.\n",
+      "type": "object",
+      "properties": {
+        "messageHex": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 12,
+          "pattern": "^[0-9A-F]+$",
+          "description": "The challenge message that was sent to the tag."
+        },
+        "responseHex": {
+          "type": "string",
+          "pattern": "^[0-9A-F]*$",
+          "minLength": 0,
+          "maxLength": 16,
+          "description": "The authentication response that was received from the tag. If a value other than success was received\nfrom the tag, responseHex will contain an empty string.\n"
+        },
+        "tidHex": {
+          "type": "string",
+          "pattern": "^[0-9A-F]+$",
+          "minLength": 16,
+          "maxLength": 16,
+          "description": "Present if 64 bits of TID information, which excludes TID words 0 and 2, was returned with the\nauthentication response received from the tag.\n"
+        }
+      },
+      "required": [
+        "responseHex"
+      ]
+    },
+    "CommonEventConfiguration": {
+      "type": "object",
+      "description": "EventConfiguration that applies to all events.",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "disabled",
+          "description": "Enable or disable the inclusion of the reader's hostname in all events."
+        }
+      }
+    },
+    "TagReportingConfiguration": {
+      "type": "object",
+      "description": "Configuration of tag reporting behavior.",
+      "properties": {
+        "reportingIntervalSeconds": {
+          "type": "integer",
+          "description": "The reporting interval is the duration after which a tag persisting in the field of view is\nreported again. Set to zero to disable the feature.\n",
+          "minimum": 0,
+          "maximum": 600,
+          "default": 0
+        },
+        "tagCacheSize": {
+          "type": "integer",
+          "description": "The maximum number of unique tags expected in the field of view during the reporting interval.\n",
+          "minimum": 1024,
+          "maximum": 8192,
+          "default": 2048
+        },
+        "antennaIdentifier": {
+          "description": "TagInventoryEvent field to use to identify antenna.",
+          "type": "string",
+          "enum": [
+            "antennaPort",
+            "antennaName"
+          ],
+          "default": "antennaPort"
+        },
+        "tagIdentifier": {
+          "description": "TagInventoryEvent field to use to identify unique tag.",
+          "type": "string",
+          "enum": [
+            "epc",
+            "tid"
+          ],
+          "default": "epc"
+        }
+      }
+    },
+    "TagInventoryEventConfiguration": {
+      "type": "object",
+      "description": "Configuration for how tagInventoryEvents will be published.",
+      "properties": {
+        "tagReporting": {
+          "$ref": "#/definitions/TagReportingConfiguration"
+        },
+        "epc": {
+          "description": "Enable or disable reporting of the epc property.",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "enabled"
+        },
+        "epcHex": {
+          "description": "Enable or disable reporting of the epcHex property.",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "disabled"
+        },
+        "tid": {
+          "description": "Enable or disable reporting of the tid property, fastId must be enabled in an\nInventoryAntennaConfiguration for tid information to be available for reporting.\n",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "enabled"
+        },
+        "tidHex": {
+          "description": "Enable or disable reporting of the tidHex property, fastId must be enabled in an\nInventoryAntennaConfiguration for tid information to be available for reporting.\n",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "disabled"
+        },
+        "antennaPort": {
+          "description": "Enable or disable reporting of the antennaPort.",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "enabled"
+        },
+        "transmitPowerCdbm": {
+          "description": "Enable or disable reporting of the transmit power.",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "enabled"
+        },
+        "peakRssiCdbm": {
+          "description": "Enable or disable reporting of the peak rssi.",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "enabled"
+        },
+        "frequency": {
+          "description": "Enable or disable reporting of the frequency.",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "enabled"
+        },
+        "pc": {
+          "description": "Enable or disable reporting of the PC word.",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "disabled"
+        },
+        "lastSeenTime": {
+          "description": "Enable or disable reporting of lastSeenTime",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "disabled"
+        },
+        "phaseAngle": {
+          "description": "Enable or disable reporting of the phase angle.",
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "disabled"
+        }
+      }
+    },
+    "InventoryEventConfiguration": {
+      "type": "object",
+      "description": "Configuration for how events will be published",
+      "properties": {
+        "common": {
+          "$ref": "#/definitions/CommonEventConfiguration"
+        },
+        "tagInventory": {
+          "$ref": "#/definitions/TagInventoryEventConfiguration"
+        }
+      }
+    },
+    "TagMemoryRead": {
+      "type": "object",
+      "description": "This structure is used to specify a range of tag memory to be read.\n",
+      "properties": {
+        "memoryBank": {
+          "$ref": "#/definitions/TagMemoryBank"
+        },
+        "wordOffset": {
+          "type": "integer",
+          "description": "The offset, in 16-bit words, relative to the start of the specified memory bank where reading will begin.\n",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "wordCount": {
+          "type": "integer",
+          "description": "The number of 16-bit words to read.\n",
+          "minimum": 1,
+          "maximum": 60
+        }
+      },
+      "required": [
+        "memoryBank",
+        "wordOffset",
+        "wordCount"
+      ]
+    },
+    "TagMemoryData": {
+      "type": "object",
+      "description": "Represents a block of tag memory that was read.\n",
+      "properties": {
+        "memoryBank": {
+          "$ref": "#/definitions/TagMemoryBank"
+        },
+        "wordOffset": {
+          "type": "integer",
+          "description": "The offset, in 16-bit words, relative to the start of the specified memory bank, from where the memory was read.\n",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "tagDataHex": {
+          "type": "string",
+          "pattern": "^[0-9A-F]*$",
+          "description": "The hex-encoded contents of the tag's memory. An empty string is sent by the device if the tag memory read\nwas not successful.\n"
+        }
+      },
+      "required": [
+        "memoryBank",
+        "wordOffset",
+        "tagDataHex"
+      ]
+    },
+    "InventoryAntennaConfiguration": {
+      "type": "object",
+      "properties": {
+        "antennaName": {
+          "$ref": "#/definitions/AntennaName"
+        },
+        "antennaPort": {
+          "$ref": "#/definitions/AntennaPort"
+        },
+        "transmitPowerCdbm": {
+          "$ref": "#/definitions/TransmitPowerCdbm"
+        },
+        "rfMode": {
+          "$ref": "#/definitions/RfMode"
+        },
+        "inventorySession": {
+          "$ref": "#/definitions/InventorySession"
+        },
+        "inventorySearchMode": {
+          "$ref": "#/definitions/InventorySearchMode"
+        },
+        "estimatedTagPopulation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32768,
+          "description": "The estimated number of tags in the antenna's field of view."
+        },
+        "filtering": {
+          "$ref": "#/definitions/InventoryFilterConfiguration"
+        },
+        "powerSweeping": {
+          "$ref": "#/definitions/TransmitPowerSweepConfiguration"
+        },
+        "fastId": {
+          "$ref": "#/definitions/FastId"
+        },
+        "receiveSensitivityDbm": {
+          "type": "integer",
+          "description": "The receive sensitivity in dBm.\nThis setting will limit the reported tags to those with an RSSI greater than this value.\nTo have the reader report tags at its greatest sensitivity do not specify this parameter.\n"
+        },
+        "tagAuthentication": {
+          "$ref": "#/definitions/TagAuthentication"
+        },
+        "tagMemoryReads": {
+          "description": "When specified, the reader will perform additional access operations and return\nadditional data from the tag, at the cost of slower tag throughput.\n",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TagMemoryRead"
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "tagAccessPasswordHex": {
+          "description": "The tag access password to use when executing access commands that require a password to complete.\nIf no operations require the execution of access commands this field should not be used.\n",
+          "type": "string",
+          "pattern": "^[0-9A-Fa-f]*[1-9A-Fa-f]+[0-9A-Fa-f]*$",
+          "minLength": 8,
+          "maxLength": 8
+        }
+      },
+      "required": [
+        "antennaPort",
+        "transmitPowerCdbm",
+        "rfMode",
+        "inventorySession",
+        "inventorySearchMode",
+        "estimatedTagPopulation"
+      ]
+    },
+    "InventoryStartTrigger": {
+      "description": "Start the inventory when the specified condition has been satisfied.\n",
+      "type": "object",
+      "properties": {
+        "gpiTransitionEvent": {
+          "$ref": "#/definitions/GpiTransitionEvent"
+        }
+      }
+    },
+    "InventoryStopTrigger": {
+      "description": "Stop the inventory when the specified condition has been satisfied.\n",
+      "type": "object",
+      "properties": {
+        "gpiTransitionEvent": {
+          "$ref": "#/definitions/GpiTransitionEvent"
+        }
+      }
+    },
+    "InventoryRequest": {
+      "type": "object",
+      "properties": {
+        "eventConfig": {
+          "$ref": "#/definitions/InventoryEventConfiguration"
+        },
+        "antennaConfigs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InventoryAntennaConfiguration"
+          },
+          "minItems": 1,
+          "maxItems": 255
+        },
+        "channelFrequenciesKHz": {
+          "description": "For non frequency hopping regions that allow the choice of operating frequency, this array contains the\nsequence of frequencies to use. Permissible values are region-dependent and will be included in the JSON\nschema produced by the reader.\n",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "startTriggers": {
+          "description": "This property contains an array of triggers that will start the inventory. If any\ntriggers are specified, then the RFID operation will transition to the ARMED state.\n\nWhen the reader is in the ARMED state, a trigger will transition the reader to the RUNNING\nstate and begin the inventory.\n",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/InventoryStartTrigger"
+          }
+        },
+        "stopTriggers": {
+          "description": "This property contains an array of triggers that will stop the inventory.\n\nWhen the reader is in the RUNNING state, a trigger will transition the reader to the ARMED\nstate and stop the inventory.\n",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/InventoryStopTrigger"
+          }
+        }
+      },
+      "required": [
+        "antennaConfigs"
+      ]
+    },
+    "ReaderStatus": {
+      "type": "object",
+      "description": "Returns the current status of the reader.",
+      "properties": {
+        "activePreset": {
+          "type": "object",
+          "description": "The running preset. If no preset is running, this property is not included in\nthe status response.\n",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/PresetId"
+            },
+            "profile": {
+              "description": "The profile of the running preset.",
+              "type": "string",
+              "enum": [
+                "inventory"
+              ]
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "description": "Indicates whether an RFID operation is currenty running on the reader (running),\nis currently not running an RFID operation, but is waiting to be triggered (armed),\nor is not running an RFID operation and is not waiting to be triggered (idle).\n",
+          "enum": [
+            "running",
+            "armed",
+            "idle"
+          ]
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The current, system time on the reader."
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "The serial number of the reader.",
+          "example": "370-10-15-0036"
+        },
+        "mqttBrokerConnectionStatus": {
+          "type": "string",
+          "description": "The connection status to the MQTT broker.",
+          "enum": [
+            "connected",
+            "disconnected"
+          ]
+        },
+        "mqttTlsAuthentication": {
+          "type": "string",
+          "description": "The Secure-MQTT authentication and encryption status. \\\nnone -- server not authenticated, no encryption \\\nserver -- server authenticated, TLS encryption\n",
+          "enum": [
+            "none",
+            "server"
+          ]
+        },
+        "kafkaClusterConnectionStatus": {
+          "type": "string",
+          "description": "The connection status to the Kafka cluster.\nconnected -- The device is connected to at least one broker in the Kafka cluster.\ndisconnected -- The device is not connected to any brokers within the Kafka cluster.\n",
+          "enum": [
+            "connected",
+            "disconnected"
+          ]
+        }
+      }
+    },
+    "StreamConfiguration": {
+      "type": "object",
+      "description": "Contains configuration options for publishing data to HTTP streams.  These settings apply to all\nHTTP streams and also affect the setting of the history buffer that will be used when a new HTTP stream\nis established.\n",
+      "properties": {
+        "eventBufferSize": {
+          "type": "integer",
+          "description": "Number of events that can be stored on the reader waiting for future delivery.  If the bufferSize is 0\nthen no buffer is created and no history will be saved.\n",
+          "minimum": 0,
+          "maximum": 300000,
+          "default": 0
+        },
+        "eventPerSecondLimit": {
+          "type": "integer",
+          "description": "Maximum number of events that may be delivered per second. This setting can be used to throttle the\ndelivery of events during peak transmission times such as when replaying history during a new\nconnection. Care should be taken to not set this value lower than the normal event generation rate\nof the reader or the queue attached to the HTTP stream will fill up and events will be purged. A\nvalue of Zero (0) means that no eventsPerSecondLimit is applied.\n",
+          "minimum": 0,
+          "maximum": 100000,
+          "default": 0
+        },
+        "eventAgeLimitMinutes": {
+          "type": "integer",
+          "description": "Maximum age of any event in the history buffer.  Any event older than this will be purged automatically\nfrom the buffer without the generation of an OverflowEvent.  Use this value to configure the maximum\nevent lifetime for the history buffer.\n",
+          "minimum": 1,
+          "maximum": 1440,
+          "default": 10
+        }
+      }
+    },
+    "MqttConfiguration": {
+      "type": "object",
+      "description": "Contains the connection and configuration options for connecting and publishing data to an\nMQTT broker.\n",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "description": "Used to enable or disable MQTT output.",
+          "default": false
+        },
+        "brokerHostname": {
+          "type": "string",
+          "description": "The hostname to use for connecting to the MQTT broker.",
+          "minLength": 1,
+          "maxLength": 253
+        },
+        "brokerPort": {
+          "type": "integer",
+          "description": "The TCP port to use for connecting to the MQTT broker.",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 1883
+        },
+        "cleanSession": {
+          "type": "boolean",
+          "description": "This flag is used for determining the client's session type. When set to `true`,\nthe broker will remove all information about this device when it disconnects.\nWhen set to `false`, the broker considers this device to be a durable client\nand preserves the appropriate state across client sessions.\n",
+          "default": false
+        },
+        "clientId": {
+          "type": "string",
+          "description": "A string used to uniquely identify this device to the MQTT broker. This\nidentifier is used for session management, allowing clients to be durable\nacross several disconnects and reconnects.\n",
+          "minLength": 1,
+          "maxLength": 23,
+          "pattern": "^[a-zA-Z0-9]+$"
+        },
+        "eventBufferSize": {
+          "type": "integer",
+          "description": "Number of events that can be stored on the reader waiting for delivery to the MQTT broker.\n",
+          "minimum": 1000,
+          "maximum": 300000,
+          "default": 100000
+        },
+        "eventPerSecondLimit": {
+          "type": "integer",
+          "description": "Maximum number of events that may be delivered per second.  This setting can be used to throttle the\ndelivery of events during peak transmission times such as recovery after a network outage.  Care\nshould be taken to not set this value lower than the normal event generation rate of the reader or\nthe queue will fill up and events will be purged.  A value of Zero (0) means that no\neventsPerSecondLimit is applied.\n",
+          "minimum": 0,
+          "maximum": 100000,
+          "default": 0
+        },
+        "eventPendingDeliveryLimit": {
+          "type": "integer",
+          "description": "Maximum number of events concurrently processed by the mqtt delivery layer. When\neventQualityOfService is greater than Zero (0) this will limit the rate of delivery to the MQTT\nbroker.\n",
+          "minimum": 10,
+          "maximum": 10000,
+          "default": 10
+        },
+        "eventQualityOfService": {
+          "type": "integer",
+          "description": "The QoS level of the MQTT connection. The different levels can be described\nas follows, according to the MQTT specification:\n\n#### QoS 0: At most once delivery\n\nThe message is delivered according to the capabilities of the underlying network.\nNo response is sent by the receiver and no retry is performed by the sender. The\nmessage arrives at the receiver either once or not at all.\n\n#### QoS 1: At least once delivery\n\nThis quality of service ensures that the message arrives at the receiver at least\nonce, possibly multiple times.\n\n#### QoS 2: Exactly once delivery\n\nThis is the highest quality of service, for use when neither loss nor duplication\nof messages are acceptable. There is an increased overhead associated with this\nquality of service.\n",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        },
+        "eventTopic": {
+          "type": "string",
+          "description": "The base topic where the device will publish events.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "keepAliveIntervalSeconds": {
+          "type": "integer",
+          "description": "Specifies how often the device should check-in with the broker by sending a control\npacket. From the MQTT specification:\n\n\u003e If the Keep Alive value is non-zero and the Server does not receive a Control Packet\n\u003e from the Client within one and a half times the Keep Alive time period, it MUST\n\u003e disconnect the Network Connection to the Client as if the network had failed.\n",
+          "minimum": 0,
+          "maximum": 65535,
+          "default": 0
+        },
+        "username": {
+          "type": "string",
+          "description": "The username to use when authenticating with the broker.",
+          "minLength": 0,
+          "maxLength": 200,
+          "default": ""
+        },
+        "password": {
+          "type": "string",
+          "description": "The password to use when authenticating with the broker.",
+          "format": "password",
+          "minLength": 0,
+          "maxLength": 200,
+          "default": ""
+        },
+        "willTopic": {
+          "type": "string",
+          "description": "The topic where the _Last Will and Testament_ will be published. If this is provided\na willMessage must also be provided.\n",
+          "minLength": 0,
+          "maxLength": 200,
+          "default": ""
+        },
+        "willMessage": {
+          "type": "string",
+          "description": "The message contents of the device's _Last Will and Testament_. If this is provided\na willTopic must also be provided.\n",
+          "minLength": 0,
+          "maxLength": 500,
+          "default": ""
+        },
+        "willQualityOfService": {
+          "type": "integer",
+          "description": "The QoS to use when publishing this device's \"Last Will and Testament.\" See\n`eventQualityOfService` for details on how the different quality of service\nlevels affect message transmission.\n",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "required": [
+        "brokerHostname",
+        "clientId",
+        "eventTopic"
+      ]
+    },
+    "KafkaConfiguration": {
+      "type": "object",
+      "description": "Contains the connection and configuration options for connecting and pushing messages to a\nKafka broker.\n",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "description": "Used to enable or disable Kafka output.",
+          "default": false
+        },
+        "bootstraps": {
+          "description": "A list of Kafka bootstrap server configurations to connect and push messages to.\nDevice will connect to broker and utilize metadata to determine additional brokers\nwithin the cluster that aren't included in this list.\n",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KafkaBootstrapServerConfiguration"
+          },
+          "minItems": 1
+        },
+        "clientId": {
+          "type": "string",
+          "description": "A string used to uniquely identify this device to the Kafka broker.",
+          "minLength": 1,
+          "maxLength": 23,
+          "pattern": "^[a-zA-Z0-9]+$"
+        },
+        "eventTopic": {
+          "type": "string",
+          "description": "The base topic where the device will publish events.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "partitionKey": {
+          "type": "string",
+          "description": "A string specifying the message key, used for partitioning.\nIf this is not specified, will randomly select partition.\n",
+          "minLength": 0,
+          "maxLength": 200,
+          "default": ""
+        },
+        "eventBatchLimit": {
+          "type": "integer",
+          "description": "An integer specifying maximum number of events/messages batched in one message set.\nThe eventBatchLingerMilliseconds value and the client's internal buffer size will impact\nactual number of messages contained within one message set.\n",
+          "minimum": 1,
+          "maximum": 8192,
+          "default": 8192
+        },
+        "eventBatchLingerMilliseconds": {
+          "type": "integer",
+          "description": "An integer specifying the amount of time, in milliseconds, to wait to send batch messages\nwhen eventBatchLimit has not yet been reached. A value of 0 will send each message as it is\navailable.\n",
+          "minimum": 0,
+          "maximum": 900000,
+          "default": 5
+        }
+      },
+      "required": [
+        "bootstraps",
+        "clientId",
+        "eventTopic"
+      ]
+    },
+    "KafkaBootstrapServerConfiguration": {
+      "type": "object",
+      "description": "Contains the broker hostname and port for a Kafka connection.",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "The hostname to use for connecting to the Kafka broker.",
+          "minLength": 1,
+          "maxLength": 253,
+          "pattern": "^[^,]+$"
+        },
+        "port": {
+          "type": "integer",
+          "description": "The TCP port to use for connecting to the Kafka broker.",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 9092
+        }
+      },
+      "required": [
+        "hostname"
+      ]
+    },
+    "TagInventoryEvent": {
+      "type": "object",
+      "description": "An event sent to deliver information about a tag read during inventory.",
+      "properties": {
+        "epc": {
+          "$ref": "#/definitions/Epc"
+        },
+        "epcHex": {
+          "$ref": "#/definitions/EpcHex"
+        },
+        "tid": {
+          "$ref": "#/definitions/Tid"
+        },
+        "tidHex": {
+          "$ref": "#/definitions/TidHex"
+        },
+        "antennaPort": {
+          "$ref": "#/definitions/AntennaPort"
+        },
+        "antennaName": {
+          "$ref": "#/definitions/AntennaName"
+        },
+        "transmitPowerCdbm": {
+          "$ref": "#/definitions/TransmitPowerCdbm"
+        },
+        "peakRssiCdbm": {
+          "type": "integer",
+          "description": "The peak received power of the EPC backscatter in cdBm. We will give the client the opportunity to\nenable Impinj's high-precision mode to receive more accurate data.\n"
+        },
+        "frequency": {
+          "type": "integer",
+          "description": "The frequency that was used to read the tag, in kHz."
+        },
+        "pc": {
+          "type": "string",
+          "format": "Base64Url-Encoding",
+          "description": "The PC word (16-bits) backscattered by the inventoried tag."
+        },
+        "lastSeenTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The UTC time at which the tag was last seen.\n"
+        },
+        "phaseAngle": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360,
+          "description": "The phase angle in degrees of the tag that was read, accurate to two decimal places.\n"
+        },
+        "tagAuthenticationResponse": {
+          "$ref": "#/definitions/TagAuthenticationResponse"
+        },
+        "tagMemoryData": {
+          "type": "array",
+          "description": "This array will be provided if the tagMemoryReads parameter is specified for the\nInventoryAntennaConfiguration that inventoried this tag.\n",
+          "items": {
+            "$ref": "#/definitions/TagMemoryData"
+          },
+          "minItems": 1,
+          "maxItems": 4
+        }
+      }
+    },
+    "TagLocationEvent": {
+      "type": "object",
+      "description": "Contains tag location data.",
+      "properties": {
+        "epc": {
+          "$ref": "#/definitions/Epc"
+        },
+        "lastSeenTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The UTC time at which the tag was last seen.\n"
+        },
+        "xCm": {
+          "type": "integer",
+          "description": "The x coordinate of the tag location."
+        },
+        "yCm": {
+          "type": "integer",
+          "description": "The y coordinate of the tag location."
+        },
+        "confidenceMetric": {
+          "type": "integer",
+          "description": "A metric of the quality of the location estimate."
+        },
+        "confidenceData": {
+          "type": "array",
+          "description": "Impinj proprietary location confidence data.",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "DiagnosticEvent": {
+      "description": "Contains diagnostic information.",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "AntennaConnectedEvent": {
+      "type": "object",
+      "description": "An event sent when the specified antenna port is determined to be connected.\nThe event is delivered only when the antenna changes to this state and has built-in hysteresis.\n",
+      "properties": {
+        "antennaPort": {
+          "$ref": "#/definitions/AntennaPort"
+        }
+      },
+      "required": [
+        "antennaPort"
+      ]
+    },
+    "AntennaDisconnectedEvent": {
+      "type": "object",
+      "description": "An event sent when the specified antenna port is determined to be disconnected.\nThe event is delivered only when the antenna changes to this state and has built-in hysteresis.\n",
+      "properties": {
+        "antennaPort": {
+          "$ref": "#/definitions/AntennaPort"
+        }
+      },
+      "required": [
+        "antennaPort"
+      ]
+    },
+    "InventoryStatusEvent": {
+      "description": "An event sent to deliver a change in the state of the current InventoryRequest.",
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "The new state of the InventoryRequest.",
+          "type": "string",
+          "enum": [
+            "idle",
+            "running",
+            "armed"
+          ]
+        }
+      }
+    },
+    "InventoryTerminatedEvent": {
+      "type": "object",
+      "description": "An empty event sent to indicate that the InventoryRequest terminated due to a reader exception."
+    },
+    "GpiTransitionEvent": {
+      "description": "An event sent when a GPI state transition occurs.",
+      "type": "object",
+      "properties": {
+        "gpi": {
+          "description": "The GPI pin for which the state transition occurred.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "transition": {
+          "description": "The transition that occurred on the specified pin.",
+          "type": "string",
+          "enum": [
+            "high-to-low",
+            "low-to-high"
+          ]
+        }
+      }
+    },
+    "OverflowEvent": {
+      "type": "object",
+      "description": "An Event sent when an event buffer overflow occurs.\n",
+      "properties": {
+        "firstEventTimestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the first event that was purged from the buffer."
+        },
+        "lastEventTimestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the last event that was purged from the buffer."
+        },
+        "eventsPurged": {
+          "type": "integer",
+          "description": "The number of events that were purged from the buffer."
+        },
+        "eventsRemaining": {
+          "type": "integer",
+          "description": "The number of events that remained in the buffer after it was purged."
+        }
+      }
+    },
+    "ReaderEvent": {
+      "type": "object",
+      "description": "Contains information that is reported with all events such as timestamp.  Also contains\nexactly one specific event detail object from the list shown here.\n",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "The hostname of the reader that generated this event."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The UTC time at which the event was processed and queued for delivery.\n"
+        },
+        "tagInventoryEvent": {
+          "$ref": "#/definitions/TagInventoryEvent"
+        },
+        "antennaConnectedEvent": {
+          "$ref": "#/definitions/AntennaConnectedEvent"
+        },
+        "antennaDisconnectedEvent": {
+          "$ref": "#/definitions/AntennaDisconnectedEvent"
+        },
+        "inventoryStatusEvent": {
+          "$ref": "#/definitions/InventoryStatusEvent"
+        },
+        "inventoryTerminatedEvent": {
+          "$ref": "#/definitions/InventoryTerminatedEvent"
+        },
+        "diagnosticEvent": {
+          "$ref": "#/definitions/DiagnosticEvent"
+        },
+        "overflowEvent": {
+          "$ref": "#/definitions/OverflowEvent"
+        },
+        "tagLocationEntryEvent": {
+          "$ref": "#/definitions/TagLocationEvent"
+        },
+        "tagLocationUpdateEvent": {
+          "$ref": "#/definitions/TagLocationEvent"
+        },
+        "tagLocationExitEvent": {
+          "$ref": "#/definitions/TagLocationEvent"
+        }
+      },
+      "required": [
+        "timestamp"
+      ]
+    },
+    "Hostname": {
+      "type": "object",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])$"
+        }
+      },
+      "required": [
+        "hostname"
+      ]
+    },
+    "IpConfiguration": {
+      "type": "object",
+      "properties": {
+        "addressMode": {
+          "type": "string",
+          "description": "The addressing mode used for this interface. If the `addressMode` is set to `dynamic`,\nthe optional `staticAddress`, `staticPrefix`, and `staticGateway` provided with the\nrequest will be saved on the reader, but not used.\n\nWhen the `addressMode` is set to `static`, the values for `staticAddress`, `staticPrefix`,\nand `staticGateway` will be used for the network interface configuration. If the values\nfor those fields are not provided with the request, the previously set values will be\nused. If no values are found for 'staticAddress' and `staticPrefix`, an error response\nwill be returned. If no value for 'staticGateway' is found, the reader's gateway will\nnot be configured and the reader can only be accessed within the local network.\n",
+          "enum": [
+            "dynamic",
+            "static"
+          ]
+        },
+        "staticAddress": {
+          "type": "string",
+          "description": "The IP address to use when addressMode is set to `static`. Could be either an IPv4 address\nin dot-decimal format or an IPv6 address compliant with RFC-5952.\n",
+          "maxLength": 64
+        },
+        "staticPrefix": {
+          "type": "integer",
+          "description": "The network prefix length to use when addressMode is set to `static`.\nA typical value is 24 for IPv4 and 64 for IPv6.\n",
+          "minimum": 8,
+          "maximum": 128
+        },
+        "staticGateway": {
+          "type": "string",
+          "description": "The gateway to use when the `addressMode` is set to `static`. Could be either an IPv4 address\nin dot-decimal format or an IPv6 address compliant with RFC-5952.\n",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "addressMode"
+      ]
+    },
+    "LlrpConnection": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "The status of the LLRP connection.",
+          "enum": [
+            "disabled",
+            "connected",
+            "disconnected"
+          ]
+        },
+        "peerAddress": {
+          "type": "string",
+          "description": "IP address of the connected device. Will contain either an IPv4 address in dot-decimal format,\nor an IPv6 address compliant with RFC-5952. Will only be present if status is connected.\n",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "LlrpStatus": {
+      "type": "object",
+      "description": "General LLRP and connection status.",
+      "properties": {
+        "llrpRfidStatus": {
+          "description": "General LLRP RFID status.",
+          "type": "string",
+          "enum": [
+            "idle",
+            "enabled",
+            "active"
+          ]
+        },
+        "llrpConnection": {
+          "$ref": "#/definitions/LlrpConnection"
+        }
+      },
+      "required": [
+        "llrpRfidStatus",
+        "llrpConnection"
+      ]
+    },
+    "NetworkAddress": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/NetworkProtocol"
+        },
+        "address": {
+          "type": "string",
+          "description": "The IP address of the interface. Could be either an IPv4 address in dot-decimal\nformat or an IPv6 address compliant with RFC-5952. The `protocol` property provides\nthe expected network protocol version of the address.\n",
+          "maxLength": 64
+        },
+        "prefix": {
+          "type": "integer",
+          "description": "The network prefix length of the interface. A typical value is 24 for IPv4 and 64 for IPv6.\n",
+          "minimum": 8,
+          "maximum": 128
+        },
+        "gateway": {
+          "type": "string",
+          "description": "The gateway address of the interface. Could be either an IPv4 address in dot-decimal\nformat or an IPv6 address compliant with RFC-5952.\n",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "protocol"
+      ]
+    },
+    "NetworkInterface": {
+      "type": "object",
+      "properties": {
+        "interfaceId": {
+          "type": "integer",
+          "description": "A unique identifier of the network interface assigned by the reader.",
+          "minimum": 0
+        },
+        "interfaceName": {
+          "type": "string",
+          "description": "The name of the network interface.",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "status": {
+          "type": "string",
+          "description": "The state of the network interface.",
+          "enum": [
+            "connected",
+            "disconnected"
+          ]
+        },
+        "networkAddress": {
+          "type": "array",
+          "description": "The current IPv4 and/or IPv6 network addresses on the interface.\n",
+          "items": {
+            "$ref": "#/definitions/NetworkAddress"
+          },
+          "minItems": 0,
+          "maxItems": 2
+        },
+        "hardwareAddress": {
+          "type": "string",
+          "description": "The hardware or MAC address associated with the network interface.",
+          "pattern": "^(([0-9A-Fa-f]{2}[:]){5}[0-9A-Fa-f]{2})$",
+          "minLength": 17,
+          "maxLength": 17
+        }
+      },
+      "required": [
+        "interfaceId",
+        "interfaceName",
+        "status",
+        "networkAddress",
+        "hardwareAddress"
+      ]
+    },
+    "NetworkProtocol": {
+      "type": "string",
+      "description": "An enumeration of network protocols that are supported by the reader.",
+      "enum": [
+        "ipv4",
+        "ipv6"
+      ]
+    },
+    "NtpConfiguration": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "description": "Indicates whether the NTP service should be enabled or disabled. Setting active to false\neffectively disable NTP service on the reader.\n"
+        }
+      },
+      "required": [
+        "active"
+      ]
+    },
+    "NtpServer": {
+      "type": "object",
+      "description": "Information pertaining to a NTP server on the reader.",
+      "properties": {
+        "serverId": {
+          "type": "integer",
+          "description": "The unique identifier assigned to a NTP server by the reader.",
+          "minimum": 0
+        },
+        "server": {
+          "type": "string",
+          "description": "Fully qualified domain name or IP address of the NTP server. Could be either an IPv4\naddress in dot-decimal format or an IPv6 address compliant with RFC-5952.\n",
+          "minLength": 1,
+          "maxLength": 253
+        },
+        "serverType": {
+          "type": "string",
+          "description": "Indicates if this is a static or dynamic NTP server. Static servers are statically\nadded by users. Dynamic servers are those discovered automatically via DHCP servers.\n",
+          "enum": [
+            "static",
+            "dynamic"
+          ]
+        }
+      },
+      "required": [
+        "serverId",
+        "server",
+        "serverType"
+      ]
+    },
+    "NtpServerInfo": {
+      "type": "object",
+      "description": "Detailed information pertaining to a NTP server on the reader.",
+      "properties": {
+        "serverId": {
+          "type": "integer",
+          "description": "The unique identifier assigned to a NTP server by the reader.",
+          "minimum": 0
+        },
+        "server": {
+          "type": "string",
+          "description": "Fully qualified domain name or IP address of the NTP server. Could be either an IPv4\naddress in dot-decimal format or an IPv6 address compliant with RFC-5952.\n",
+          "minLength": 1,
+          "maxLength": 253
+        },
+        "serverType": {
+          "type": "string",
+          "description": "Indicates if this is a static or dynamic NTP server. Static servers are statically\nadded by users. Dynamic servers are those discovered automatically via DHCP servers.\n",
+          "enum": [
+            "static",
+            "dynamic"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "synchronized",
+            "combined",
+            "excluded",
+            "disconnected",
+            "inconsistent",
+            "unreliable",
+            "unknown"
+          ]
+        },
+        "poll": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Shows the rate at which the server is being polled, as a base-2 logarithm of the interval\nin seconds. Thus, a value of 6 would indicate that a measurement is being made every 64\nseconds.\n",
+          "minimum": 0
+        },
+        "stratum": {
+          "type": "integer",
+          "description": "Shows the stratum of the server, as reported in its most recently received sample.\nStratum 1 indicates a computer with a locally attached reference clock. A computer that\nis synchronized to a stratum 1 computer is at stratum 2. A computer that is synchronized\nto a stratum 2 computer is at stratum 3, and so on.\n",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "reach": {
+          "type": "integer",
+          "description": "Shows the server's reachability register printed as an octal number. The register has\n8 bits and is updated on every received or missed packet from the source. A value of 377\nindicates that a valid reply was received for all from the last eight transmissions.\n",
+          "minimum": 0,
+          "maximum": 377
+        },
+        "lastRx": {
+          "type": "string",
+          "description": "Indicates how long ago the last good sample was received from this server. This is\nnormally in seconds. The letters m, h, d or y indicate minutes, hours, days, or years.\n"
+        },
+        "offset": {
+          "type": "string",
+          "description": "The offset between the local clock and the server at the last measurement. The default\nmeasurement unit is in seconds, but it can be suffixed by ns (nanoseconds), us (microseconds),\nms (milliseconds) for other measurement units.\n"
+        }
+      },
+      "required": [
+        "serverId",
+        "server",
+        "serverType"
+      ]
+    },
+    "OperatingRegion": {
+      "type": "string",
+      "description": "The descriptive name of a regulatory region.",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "PowerSource": {
+      "description": "Possible power sources for the reader.",
+      "type": "string",
+      "enum": [
+        "auto",
+        "poe",
+        "poeplus"
+      ]
+    },
+    "PowerConfiguration": {
+      "type": "object",
+      "properties": {
+        "powerSource": {
+          "$ref": "#/definitions/PowerSource"
+        },
+        "allocatedPowerMilliwatts": {
+          "type": "integer",
+          "description": "This field is only available when powerSource is set to auto. Contains the actual\npower that was allocated for the reader by the switch through negotiation.\n"
+        }
+      },
+      "required": [
+        "powerSource"
+      ]
+    },
+    "RegionInfo": {
+      "type": "object",
+      "properties": {
+        "operatingRegion": {
+          "$ref": "#/definitions/OperatingRegion"
+        },
+        "selectableRegions": {
+          "type": "array",
+          "description": "A list of unique selectable regions.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "minItems": 1,
+          "maxItems": 255
+        }
+      },
+      "required": [
+        "operatingRegion",
+        "selectableRegions"
+      ]
+    },
+    "RfidInterface": {
+      "type": "object",
+      "properties": {
+        "rfidInterface": {
+          "description": "An enumeration of interfaces that are supported by the reader.",
+          "type": "string",
+          "enum": [
+            "llrp",
+            "rest"
+          ]
+        }
+      },
+      "required": [
+        "rfidInterface"
+      ]
+    },
+    "StatusResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "The status response message for the operation."
+        }
+      }
+    },
+    "SystemImage": {
+      "type": "object",
+      "properties": {
+        "primaryFirmware": {
+          "type": "string",
+          "description": "The version of the booted firmware.",
+          "pattern": "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$",
+          "minLength": 7,
+          "maxLength": 15
+        },
+        "primaryCustomer": {
+          "type": "string",
+          "description": "The version of the installed and running customer application (CAP).",
+          "pattern": "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$",
+          "minLength": 7,
+          "maxLength": 15
+        },
+        "secondaryFirmware": {
+          "type": "string",
+          "description": "The version of the firmware installed on the secondary partition.",
+          "pattern": "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$",
+          "minLength": 7,
+          "maxLength": 15
+        },
+        "secondaryCustomer": {
+          "type": "string",
+          "description": "The version of the customer application (CAP) installed on the secondary partition.",
+          "pattern": "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$",
+          "minLength": 7,
+          "maxLength": 15
+        },
+        "scmRevision": {
+          "type": "string",
+          "description": "Unique build hash of primaryFirmware.",
+          "pattern": "^[a-fA-F0-9]+$",
+          "minLength": 40,
+          "maxLength": 40
+        },
+        "buildDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of build for primaryFirmware."
+        },
+        "buildPlan": {
+          "type": "string",
+          "description": "Traceable build identifier for primaryFirmware.",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "primaryFirmware"
+      ]
+    },
+    "SystemInfo": {
+      "type": "object",
+      "properties": {
+        "productModel": {
+          "type": "string",
+          "description": "The model number of the reader.",
+          "maxLength": 32
+        },
+        "manufacturer": {
+          "type": "string",
+          "description": "The reader manufacturer.",
+          "maxLength": 32
+        },
+        "productDescription": {
+          "type": "string",
+          "description": "A short, human-friendly description of the reader.",
+          "maxLength": 64
+        },
+        "productSku": {
+          "type": "string",
+          "description": "The official product SKU for the reader.",
+          "maxLength": 32
+        },
+        "productHla": {
+          "type": "string",
+          "description": "The reader's high-level assembly code.",
+          "maxLength": 32
+        },
+        "pcba": {
+          "type": "string",
+          "description": "The assembly code for the reader's PCB.",
+          "maxLength": 32
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "The serial number of the reader.",
+          "maxLength": 32
+        }
+      },
+      "required": [
+        "productModel",
+        "manufacturer",
+        "productDescription",
+        "productSku",
+        "productHla",
+        "pcba",
+        "serialNumber"
+      ]
+    },
+    "TimeInfo": {
+      "type": "object",
+      "properties": {
+        "systemTime": {
+          "type": "string",
+          "description": "The current system time in UTC and RFC-3339 compliant format.\nTime precision is at second-level accuracy.\n",
+          "format": "date-time",
+          "maxLength": 32,
+          "example": "2020-11-20T10:20:30Z"
+        },
+        "upTime": {
+          "type": "integer",
+          "description": "The number of seconds that the system has been running.",
+          "minimum": 0
+        }
+      }
+    },
+    "UpgradeStatus": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Indicates what state the upgrade process is in.",
+          "enum": [
+            "ready",
+            "verifying",
+            "installing",
+            "successful",
+            "failed"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "Additional information about the state of the upgrade or what may have caused the upgrade\nto fail.\n",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  }
+}

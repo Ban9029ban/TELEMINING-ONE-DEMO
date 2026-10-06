@@ -1,0 +1,148 @@
+services:
+  db:
+    image: postgres:15
+    container_name: dashboard_sismico_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: dashboard_sismico
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d dashboard_sismico"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: dashboard_sismico_backend
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    ports:
+      - "18000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: dashboard_sismico_frontend
+    depends_on:
+      - backend
+    ports:
+      - "15173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:0.23.2
+    container_name: dashboard_sismico_ollama
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_NO_CLOUD: "1"
+      OLLAMA_KEEP_ALIVE: 15m
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_QUEUE: "64"
+      OLLAMA_CONTEXT_LENGTH: "4096"
+    ports:
+      - "127.0.0.1:18134:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  ollama_init:
+    image: ollama/ollama:0.23.2
+    container_name: dashboard_sismico_ollama_init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_FAST_MODEL: qwen2.5:1.5b-instruct
+      OLLAMA_CHAT_MODEL: qwen3:1.7b
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "ollama pull $${OLLAMA_FAST_MODEL} &&
+       if [ \"$${OLLAMA_CHAT_MODEL}\" != \"$${OLLAMA_FAST_MODEL}\" ]; then
+         ollama pull $${OLLAMA_CHAT_MODEL};
+       fi"
+    restart: "no"
+
+  sismico_poller:
+    build:
+      context: ./poll_sismico
+      dockerfile: Dockerfile
+    container_name: dashboard_sismico_poller
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      API_URL: http://backend:8000/api/sismico/polling/run
+      INTERVAL: 120
+      SITES: "diamante andesita andes_norte andes_norte_tunel_correa pilar_norte esmeralda"
+      LOG_FILE: /logs/poll_sismico.log
+      ENABLE_LEGACY_CAPTURE: "true"
+      BACKEND_BASE_URL: http://backend:8000
+      CAPTURE_ENDPOINTS_URL: http://backend:8000/api/sismico/capture/endpoints
+      CAPTURE_STORE_URL: http://backend:8000/api/sismico/capture/store
+      LEGACY_CAPTURE_INTERVAL_SECONDS: 30
+      LEGACY_CAPTURE_DURATION_MINUTES: 10080
+      LEGACY_CAPTURE_FETCH_LINKED_IMAGES: "true"
+      LEGACY_CAPTURE_SUMMARY_LOG: /logs/legacy_capture.log
+      LEGACY_CAPTURE_STARTUP_DELAY_SECONDS: 20
+      POLL_STARTUP_DELAY_SECONDS: 10
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./logs:/logs
+      - ./fixtures:/app/fixtures:ro
+    restart: unless-stopped
+
+  semaforo_emulator_api:
+    build: ./semaforo_emulator_api
+    container_name: semaforo_emulator_api
+    ports:
+      - "19090:8000"
+    restart: unless-stopped
+
+  front_emulador:
+    image: nginx:alpine
+    container_name: front_emulador
+    depends_on:
+      - semaforo_emulator_api
+    ports:
+      - "19091:80"
+    volumes:
+      - ./front_emulador:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  ollama_data:
+

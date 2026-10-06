@@ -1,0 +1,67 @@
+ZENIT_portico_v7_prod_receiver.ino
+==================================
+
+ROL
+---
+El receiver recibe tramas LoRa del sender, responde ACK y, en produccion,
+reenvia los datos por TCP al listener. Tambien reensambla las tramas largas
+fragmentadas por el sender.
+
+MODO DE PRUEBA ACTUAL
+---------------------
+Se controla en ../zenit_lora_radio_config.h:
+  TEST_MODE = true
+
+Con TEST_MODE=true solo se inicializa LoRa. El receiver escucha LORA_TEST,
+imprime RSSI/SNR y responde LORA_ACK. Ethernet, WiFi, BLE, SD y sensores no
+se inicializan ni se atienden. El ENC28J60 queda aislado (CS alto y RESET bajo).
+
+Para produccion cambiar solo:
+  TEST_MODE = false
+
+CHIPSETS Y PINES
+----------------
+LoRa: SX1278/SX127x a 433 MHz
+  SCK=40, MOSI=41, MISO=42, CS=38, RESET=48, DIO0=5.
+Ethernet: ENC28J60
+  Comparte SCK=40, MOSI=41 y MISO=42; CS=39, RESET=8, INT=10.
+MicroSD (bus independiente): SCK=21, MOSI=14, MISO=47, CS=13.
+ADS1115: I2C SDA=11, SCL=12, direccion 0x48.
+
+BUS SPI COMPARTIDO
+------------------
+SX1278 y ENC28J60 nunca deben estar seleccionados simultaneamente. Antes de
+usar LoRa el codigo deja CS Ethernet alto; antes de inicializar/mantener
+Ethernet deja CS LoRa alto. El guard-time es 2 microsegundos, configurable en
+zenit_lora_radio_config.h. No se usan demoras largas en cada lectura para no
+perder paquetes LoRa.
+
+PARAMETROS LORA Y SEGURIDAD
+---------------------------
+Frecuencia 433.000 MHz, SF7, BW 125 kHz, CR 4/5, Sync Word 0x12, CRC activo,
+potencia 14 dBm y SPI a 2 MHz. Se editan solo en zenit_lora_radio_config.h.
+El receiver acepta tramas solo del SENDER_ID definido en ese mismo archivo.
+
+RED EN PRODUCCION
+-----------------
+Ethernet local: 192.168.100.53.
+Listener destino: 192.168.100.10:7070.
+Las tramas LoRa se encolan y se reenvian por TCP al listener.
+El heartbeat TCP se transmite cada 5 s aun si no hay enlace LoRa: sirve para
+distinguir una placa encendida de una placa sin radio enlazada.
+
+ALIMENTACION EN TERRENO
+-----------------------
+El USB solo debe usarse para programacion/diagnostico. La placa y el
+ENC28J60 requieren una fuente DC regulada compatible con su entrada (normalmente
+5 V, con al menos 2 A por placa, segun la carrier instalada) y tierra comun.
+No conectar una salida marcada 24 VAC directamente al pin USB, 5 V o 3.3 V:
+se necesita antes una fuente/convertidor AC-DC o DC-DC adecuado. Si al retirar
+USB se apagan LEDs o el enlace Ethernet, el problema es de alimentacion fisica,
+no de listener.
+
+DIAGNOSTICO
+-----------
+Al arrancar debe aparecer RegVersion=0x12. Si muestra 0x00, 0xFF u otro
+valor, revisar alimentacion 3.3 V, pines SPI, CS=38, RESET=48 y el aislamiento
+del ENC28J60. En prueba se espera: TEST RX con RSSI/SNR y ACK TX OK.

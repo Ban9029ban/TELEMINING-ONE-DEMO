@@ -1,0 +1,495 @@
+.esmeralda-page {
+  padding: 10px 14px 18px;
+  color: #22314d;
+}
+
+.esmeralda-toolbar {
+  display: flex;
+  gap: 12px;
+  margin: 8px 0 10px;
+}
+
+.esmeralda-emergency-btn {
+  border: 0;
+  border-radius: 22px;
+  min-width: 118px;
+  height: 46px;
+  padding: 0 18px;
+  background: #d37d5b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.esmeralda-shell {
+  display: grid;
+  grid-template-columns: minmax(420px, 31%) minmax(760px, 69%);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.esmeralda-shell.left-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.esmeralda-shell.map-hidden {
+  grid-template-columns: minmax(420px, 1fr);
+}
+
+.esmeralda-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.esmeralda-card {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(216,225,236,0.9);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+}
+
+.esmeralda-card-title {
+  padding: 16px 18px;
+  border-bottom: 1px solid #e4e8ef;
+  font-size: 15px;
+  font-weight: 900;
+  color: #22314d;
+}
+
+.esmeralda-brand-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  padding: 12px;
+}
+
+.esmeralda-brand-logo {
+  width: min(290px, 82%);
+  height: auto;
+  object-fit: contain;
+}
+
+.esmeralda-table-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+}
+
+.esmeralda-groups-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px 64px;
+  overflow: auto;
+}
+
+.esmeralda-group {
+  border-bottom: 1px solid #eceff5;
+  padding-bottom: 6px;
+}
+.esmeralda-group:last-child { border-bottom: 0; }
+
+.esmeralda-group-title {
+  font-size: 11px;
+  font-weight: 900;
+  color: #5a6686;
+  padding: 6px 0;
+  text-transform: uppercase;
+}
+
+.esmeralda-row {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) minmax(250px, 320px);
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.esmeralda-label {
+  font-size: 12px;
+  line-height: 1.1;
+  font-weight: 900;
+  color: #22314d;
+  text-transform: uppercase;
+}
+
+.esmeralda-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(72px, 1fr));
+  gap: 6px;
+}
+
+.esmeralda-state {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  border-radius: 14px;
+  border: 1px solid #d7dce8;
+  background: #f1f5f9;
+  color: #132234;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.esmeralda-state.active.inferior {
+  background: #d17454;
+  border-color: #d17454;
+  color: #fff;
+}
+
+.esmeralda-state.active.centro {
+  background: #06c412;
+  border-color: #06c412;
+  color: #fff;
+}
+
+.esmeralda-state.active.superior {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.esmeralda-footer-logo {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  width: min(220px, 58%);
+  object-fit: contain;
+}
+
+.esmeralda-map-card {
+  min-height: 860px;
+  display: flex;
+  flex-direction: column;
+}
+
+.esmeralda-map-body {
+  position: relative;
+  padding: 10px 12px 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.esmeralda-map-toolbar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.esmeralda-map-toolbar button {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid #d7dce8;
+  background: rgba(248,249,252,.96);
+  color: #111;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.esmeralda-map-viewport {
+  position: relative;
+  width: 100%;
+  min-height: 760px;
+  height: calc(100% - 42px);
+  overflow: hidden;
+  background: #fff;
+  border-radius: 18px;
+}
+
+.esmeralda-map-stack {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  transition: transform .28s ease;
+}
+
+.esmeralda-map-base,
+.esmeralda-map-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+}
+
+.esmeralda-map-overlay {
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.esmeralda-page.sic-lock {
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.esmeralda-page.sic-lock .esmeralda-shell {
+  height: 100%;
+  grid-template-columns: 1fr 1fr;
+}
+
+.esmeralda-page.sic-lock .esmeralda-shell.left-hidden,
+.esmeralda-page.sic-lock .esmeralda-shell.map-hidden {
+  grid-template-columns: 1fr;
+}
+
+.esmeralda-page.sic-lock .esmeralda-map-card {
+  min-height: 0;
+  height: 100%;
+}
+
+.esmeralda-page.sic-lock .esmeralda-map-body {
+  height: calc(100% - 44px);
+}
+
+.esmeralda-page.sic-lock .esmeralda-map-viewport {
+  min-height: 0;
+  height: 100%;
+}
+
+.esmeralda-map-overlay.state-centro {
+  filter: saturate(1.55) contrast(1.14) brightness(1.04);
+  opacity: .98;
+}
+
+.esmeralda-map-overlay.state-inferior,
+.esmeralda-map-overlay.state-superior {
+  filter: saturate(1.6) contrast(1.12) brightness(.99);
+  opacity: .98;
+}
+
+.esmeralda-compass {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: clamp(74px, 8vw, 122px);
+  height: auto;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.esmeralda-map-codelco {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  width: clamp(90px, 12vw, 150px);
+  height: auto;
+  z-index: 56;
+  pointer-events: none;
+  opacity: .96;
+}
+
+.esmeralda-last-register {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  min-width: 170px;
+  background: rgba(247,249,252,.95);
+  border: 1px solid #d8dee8;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #22314d;
+  z-index: 70;
+}
+.esmeralda-last-register.is-ok { border-color:#7bc47f; color:#1f5132; }
+.esmeralda-last-register.is-warning { border-color:#d8b24f; color:#6f4d00; }
+.esmeralda-last-register.is-danger { border-color:#d37d5b; color:#7d241a; }
+
+.esmeralda-map-viewport.pulse-1 .esmeralda-map-overlay,
+.esmeralda-map-viewport.pulse-1 .esmeralda-map-base {
+  animation: esmeraldaPulse 1.1s ease;
+}
+
+@keyframes esmeraldaPulse {
+  0% { opacity: .25; }
+  35% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+.esmeralda-emergency-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: rgba(116, 0, 0, 0.18);
+  -webkit-backdrop-filter: blur(1px);
+  backdrop-filter: blur(1px);
+}
+
+.esmeralda-emergency-box {
+  min-width: min(480px, 90vw);
+  padding: 28px 30px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+  color: #fff;
+  box-shadow: 0 20px 48px rgba(0,0,0,.26);
+  text-align: center;
+}
+
+.esmeralda-emergency-title {
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.esmeralda-emergency-subtitle {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: .92;
+}
+
+.esmeralda-page.wall-mode {
+  padding: 8px 10px 10px;
+}
+
+.esmeralda-page.wall-mode .esmeralda-shell {
+  grid-template-columns: minmax(420px, 32%) minmax(700px, 68%);
+  height: calc(100vh - 86px);
+}
+
+.esmeralda-page.wall-mode .esmeralda-left,
+.esmeralda-page.wall-mode .esmeralda-map-card,
+.esmeralda-page.wall-mode .esmeralda-table-card {
+  min-height: 0;
+  height: 100%;
+}
+
+.esmeralda-page.wall-mode .esmeralda-brand-card {
+  display: none;
+}
+
+.esmeralda-page.wall-mode .esmeralda-table-card {
+  flex: 1 1 auto;
+}
+
+.esmeralda-page.wall-mode .esmeralda-groups-scroll {
+  overflow: hidden;
+  padding: 8px 10px 80px;
+  gap: 8px;
+}
+
+.esmeralda-page.wall-mode .esmeralda-row {
+  grid-template-columns: minmax(165px, 1fr) minmax(240px, 300px);
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.esmeralda-page.wall-mode .esmeralda-label {
+  font-size: clamp(10px, 0.74vw, 12px);
+}
+
+.esmeralda-page.wall-mode .esmeralda-state {
+  height: 32px;
+  font-size: clamp(9px, 0.62vw, 10px);
+  border-radius: 12px;
+}
+
+.esmeralda-page.wall-mode .esmeralda-map-card {
+  min-height: 0;
+}
+
+.esmeralda-page.wall-mode .esmeralda-map-viewport {
+  min-height: 0;
+  height: calc(100% - 42px);
+}
+
+.esmeralda-page.wall-mode .esmeralda-map-codelco {
+  width: clamp(84px, 8.6vw, 128px);
+  right: 12px;
+  bottom: 10px;
+}
+
+@media (max-width: 1320px) {
+  .esmeralda-shell,
+  .esmeralda-page.wall-mode .esmeralda-shell {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .esmeralda-map-card {
+    min-height: 720px;
+  }
+  .esmeralda-page.wall-mode .esmeralda-groups-scroll {
+    overflow: auto;
+  }
+}
+
+
+/* === parpadeo notorio y desfasado: esmeralda === */
+@keyframes esmeraldaPolygonBlink {
+  0%, 100% { opacity: .96; filter: brightness(1) saturate(1); }
+  24% { opacity: .24; filter: brightness(1.25) saturate(1.25); }
+  52% { opacity: .99; filter: brightness(1.09) saturate(1.09); }
+  79% { opacity: .33; filter: brightness(1.18) saturate(1.18); }
+}
+
+.esmeralda-map-overlay {
+  animation-name: esmeraldaPolygonBlink;
+  animation-duration: 1.76s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  will-change: opacity, filter;
+}
+
+.esmeralda-map-overlay.blink-slot-0 { animation-delay: 0s; }
+.esmeralda-map-overlay.blink-slot-1 { animation-delay: .18s; }
+.esmeralda-map-overlay.blink-slot-2 { animation-delay: .41s; }
+.esmeralda-map-overlay.blink-slot-3 { animation-delay: .67s; }
+.esmeralda-map-overlay.blink-slot-4 { animation-delay: .26s; }
+.esmeralda-map-overlay.blink-slot-5 { animation-delay: .91s; }
+.esmeralda-map-overlay.blink-slot-6 { animation-delay: 1.15s; }
+
+.esmeralda-page.wall-mode .esmeralda-map-overlay {
+  animation-duration: 1.2s;
+}
+
+/* phase4 emergency + inferior red */
+.legacy-site-state-btn.active.inferior,
+.esmeralda-state.active.inferior,
+.pilarnorte-state.active.inferior {
+  background: #d17454 !important;
+  border-color: #d17454 !important;
+  color: #fff !important;
+}
+.legacy-home-card.sismico-home-card { position: relative; }
+.sismico-home-selector {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.9);
+  border-radius: 6px;
+}
+.sismico-home-selector input { width: 16px; height: 16px; cursor: pointer; }
+.sismico-home-link { color: inherit; text-decoration: none; display: block; }
+.sismico-home-card.emergency-active { box-shadow: 0 0 0 3px rgba(209,116,84,.95) inset; }
+.sismico-home-badge {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #d17454;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+}

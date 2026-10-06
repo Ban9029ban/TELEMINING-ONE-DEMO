@@ -1,0 +1,107 @@
+.cross-map-notifications {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+}
+
+.cross-map-notification {
+  position: fixed;
+  right: 50%;
+  top: 50%;
+  bottom: auto;
+  width: min(560px, calc(100vw - 40px));
+  padding: 24px 28px;
+  border: 2px solid #d97706;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #fffdf7, #fff4d6);
+  color: #283957;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .34);
+  transform: translate(50%, -50%) scale(1);
+  transform-origin: top right;
+  transition: right .7s ease, top .7s ease, width .7s ease, padding .7s ease, transform .7s ease, opacity .3s ease;
+}
+
+.cross-map-notification.state-critical {
+  border-color: #dc2626;
+  background: linear-gradient(135deg, #fff7f7, #ffe1e1);
+}
+
+.cross-map-notification-kicker {
+  margin-bottom: 10px;
+  color: #9a5a00;
+  font-size: .85rem;
+  font-weight: 900;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.cross-map-notification.state-critical .cross-map-notification-kicker {
+  color: #a11919;
+}
+
+.cross-map-notification p {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+
+.cross-map-notification-map {
+  margin-top: 12px;
+  color: #5a6981;
+  font-size: .95rem;
+  font-weight: 700;
+}
+
+.cross-map-notification.phase-queued {
+  opacity: 0;
+}
+
+.cross-map-notification.phase-corner {
+  right: 20px;
+  top: calc(116px + var(--corner-offset));
+  bottom: auto;
+  width: min(330px, calc(100vw - 32px));
+  padding: 13px 16px;
+  transform: scale(.88);
+}
+
+.cross-map-notification.phase-corner .cross-map-notification-kicker {
+  margin-bottom: 5px;
+  font-size: .67rem;
+}
+
+.cross-map-notification.phase-corner p {
+  font-size: .82rem;
+  line-height: 1.35;
+}
+
+.cross-map-notification.phase-corner .cross-map-notification-map {
+  margin-top: 6px;
+  font-size: .72rem;
+}
+
+.tm-shell.wall-mode .cross-map-notification.phase-corner,
+.tm-shell.embed-mode .cross-map-notification.phase-corner {
+  top: calc(20px + var(--corner-offset));
+}
+
+@media (max-width: 700px) {
+  .cross-map-notification {
+    padding: 20px;
+  }
+
+  .cross-map-notification p {
+    font-size: 1rem;
+  }
+
+  .cross-map-notification.phase-corner {
+    right: 8px;
+    top: calc(64px + var(--corner-offset));
+  }
+
+  .tm-shell.wall-mode .cross-map-notification.phase-corner,
+  .tm-shell.embed-mode .cross-map-notification.phase-corner {
+    top: calc(8px + var(--corner-offset));
+  }
+}

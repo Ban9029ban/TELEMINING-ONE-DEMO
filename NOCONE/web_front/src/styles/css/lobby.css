@@ -1,0 +1,123 @@
+.page-wrapper {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin-left: 20%;
+    margin-top: 4px;
+    transition: margin-left 0.3s;
+  }
+
+/* Contenedor principal */
+.layout-container {
+    display: grid;
+    grid-template-columns: 300px 1fr; /* La barra lateral tiene ancho fijo */
+    height: 100vh; /* Ocupa toda la pantalla */
+}
+
+/* Barra lateral */
+.zonas-det {
+    color: var(--sidebar-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Ocupa toda la pantalla */
+    overflow-y: auto; /* Agrega scroll si el contenido crece */
+    box-shadow: 2px 0 8px var(--shadow-color);
+}
+
+/* Título de la barra lateral */
+.zonas-mineras-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+/* Lista de zonas */
+.zonas-det ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.zonas-det ul li {
+    margin-bottom: 10px;
+    background-color: var(--sidebar-link-hover);
+    text-align: center;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.zonas-det ul li:hover {
+    background-color: var(--accent-color);
+    cursor: pointer;
+}
+
+.zonas-det a {
+    padding: .625rem 1.625rem;
+    font-weight: bold;
+    display: block;
+}
+
+/* Contenedor del mapa */
+.map-container {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Área donde se renderiza el mapa 3D */
+.map-viewer {
+    width: 90%;
+    height: 500px;
+    background: black;
+    border-radius: 10px;
+}
+
+
+
+
+/* CONTENIDO MAPA 3D*/
+.dashboard-content {
+    margin-left: 5%; /* Espacio para la barra lateral */
+    margin-top: 0px; /* Espacio para que esté debajo del navbar */
+    padding: 1px;
+    background-color: var(--body-BGcolor); /* Fondo del contenido */
+    width: 100%;
+    border-radius: 2%;
+}
+
+/* Mapa interactivo */
+.dashboard-3d {
+    position: relative;
+    width: 100%;
+    max-width: 1500px;
+    height: 500px;
+    background: var(--body-BGcolor);
+    border: 1px solid var(--body-form-BGcolor);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 20px auto; /* Centrar horizontalmente */
+    margin-top: 20px; /* Ajuste opcional */
+}
+
+
+.dashboard-header {
+    text-align: center;
+    align-self: center;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.zonas-det ul li a:hover {
+    color: #ccc !important; /* Hace el texto gris claro al pasar el mouse */
+}
+
+
+
+.container-fluid-diamante {
+    /*padding-left: 0; /* Elimina el espacio adicional del contenedor */
+    display: flex;
+    flex-direction: row;
+    margin-right: 1px;
+  }

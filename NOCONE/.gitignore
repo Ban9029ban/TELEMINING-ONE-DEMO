@@ -1,0 +1,13 @@
+# Generated test logs and artifacts
+logs/tests/*
+!logs/tests/.gitkeep
+
+artifacts/test-results/*
+!artifacts/test-results/.gitkeep
+
+.coverage
+htmlcov/
+.pytest_cache/
+
+web_front/public/videos/
+web_front/public/videos/*.mp4

@@ -1,0 +1,156 @@
+@startuml
+hide methods
+hide stereotypes
+title Modelo de datos / ER simplificado
+
+entity organization {
+  * id : uuid <<PK>>
+  --
+  * name : varchar
+  * code : varchar
+  * is_active : bool
+}
+
+entity app_user {
+  * id : uuid <<PK>>
+  --
+  * organization_id : uuid <<FK>>
+  * email : varchar
+  * full_name : varchar
+  * password_hash : varchar
+  * is_active : bool
+}
+
+entity role {
+  * id : uuid <<PK>>
+  --
+  * name : varchar
+}
+
+entity user_role {
+  * user_id : uuid <<FK>>
+  * role_id : uuid <<FK>>
+}
+
+entity site {
+  * id : uuid <<PK>>
+  --
+  * organization_id : uuid <<FK>>
+  * name : varchar
+  * code : varchar
+}
+
+entity site_map {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * name : varchar
+  * image_url : varchar
+}
+
+entity polygon {
+  * id : uuid <<PK>>
+  --
+  * map_id : uuid <<FK>>
+  * name : varchar
+  * code : varchar
+  * category : varchar
+}
+
+entity polygon_state {
+  * id : uuid <<PK>>
+  --
+  * polygon_id : uuid <<FK>>
+  * state : varchar
+  * source : varchar
+  * measured_at : timestamptz
+}
+
+entity remote_endpoint {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * name : varchar
+  * endpoint_url : varchar
+  * kind : varchar
+  * poll_interval_sec : int
+}
+
+entity alert_rule {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * name : varchar
+  * severity : varchar
+  * trigger_condition : jsonb
+}
+
+entity alert_event {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * rule_id : uuid <<FK>>
+  * severity : varchar
+  * status : varchar
+  * triggered_at : timestamptz
+}
+
+entity semaphore_command {
+  * id : uuid <<PK>>
+  --
+  * alert_event_id : uuid <<FK>>
+  * target_ip : inet
+  * action : varchar
+  * result_status : varchar
+  * executed_at : timestamptz
+}
+
+entity screen {
+  * id : uuid <<PK>>
+  --
+  * site_id : uuid <<FK>>
+  * screen_code : varchar
+  * target_url : varchar
+}
+
+entity screen_heartbeat {
+  * id : uuid <<PK>>
+  --
+  * screen_id : uuid <<FK>>
+  * browser_session_id : varchar
+  * status_code : varchar
+  * sent_at : timestamptz
+}
+
+entity ai_faq {
+  * id : uuid <<PK>>
+  --
+  * question : text
+  * answer : text
+  * sort_order : int
+}
+
+entity ai_prompt_log {
+  * id : uuid <<PK>>
+  --
+  * user_id : uuid <<FK>>
+  * prompt : text
+  * response : text
+  * created_at : timestamptz
+}
+
+organization ||--o{ app_user
+app_user ||--o{ user_role
+role ||--o{ user_role
+organization ||--o{ site
+site ||--o{ site_map
+site_map ||--o{ polygon
+polygon ||--o{ polygon_state
+site ||--o{ remote_endpoint
+site ||--o{ alert_rule
+alert_rule ||--o{ alert_event
+alert_event ||--o{ semaphore_command
+site ||--o{ screen
+screen ||--o{ screen_heartbeat
+app_user ||--o{ ai_prompt_log
+@enduml

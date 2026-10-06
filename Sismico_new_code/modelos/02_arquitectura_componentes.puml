@@ -1,0 +1,61 @@
+@startuml
+skinparam componentStyle rectangle
+title Arquitectura de componentes — Sismico_new_code
+
+package "Frontend React" {
+  [TM Shell]
+  [Módulo Sísmico]
+  [Módulo Productividad]
+  [Módulo Agentes IA]
+  [Módulo Zonas DET]
+  [Servicio API Front]
+  [Heartbeat Client]
+}
+
+package "Backend Python / FastAPI" {
+  [API Gateway]
+  [Auth / Roles]
+  [Módulo Sísmico]
+  [Motor de Reglas]
+  [Servicio Polling]
+  [Servicio Semáforos]
+  [Servicio Heartbeat]
+  [Módulo Productividad]
+  [Módulo Agente IA]
+  [Repositorio SQLAlchemy]
+}
+
+database "PostgreSQL" as DB
+component "Ollama" as OLLAMA
+component "Fuentes remotas\nJSON / HTML / API" as REMOTAS
+component "Script Python\nipsemaforo accion" as SCRIPT
+component "Pantallas Browser\nMulti-sitio" as BROWSERS
+
+[TM Shell] --> [Servicio API Front]
+[Módulo Sísmico] --> [Servicio API Front]
+[Módulo Productividad] --> [Servicio API Front]
+[Módulo Agentes IA] --> [Servicio API Front]
+[Módulo Zonas DET] --> [Servicio API Front]
+[Heartbeat Client] --> [Servicio API Front]
+
+[Servicio API Front] --> [API Gateway]
+[API Gateway] --> [Auth / Roles]
+[API Gateway] --> [Módulo Sísmico]
+[API Gateway] --> [Módulo Productividad]
+[API Gateway] --> [Módulo Agente IA]
+[API Gateway] --> [Servicio Heartbeat]
+
+[Módulo Sísmico] --> [Motor de Reglas]
+[Módulo Sísmico] --> [Repositorio SQLAlchemy]
+[Servicio Polling] --> REMOTAS
+[Servicio Polling] --> [Repositorio SQLAlchemy]
+[Motor de Reglas] --> [Servicio Semáforos]
+[Servicio Semáforos] --> SCRIPT
+[Servicio Heartbeat] --> [Repositorio SQLAlchemy]
+[Módulo Productividad] --> [Repositorio SQLAlchemy]
+[Módulo Agente IA] --> OLLAMA
+[Módulo Agente IA] --> [Repositorio SQLAlchemy]
+
+[Repositorio SQLAlchemy] --> DB
+BROWSERS --> [Heartbeat Client]
+@enduml

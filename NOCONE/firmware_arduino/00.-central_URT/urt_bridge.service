@@ -1,0 +1,12 @@
+[Unit]
+Description=URT Central Bridge (ESP32 -> Listener Central)
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/zenit_urt
+ExecStart=/usr/bin/python3 /home/pi/zenit_urt/urt_bridge.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

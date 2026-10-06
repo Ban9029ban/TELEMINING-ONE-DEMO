@@ -1,0 +1,17 @@
+services:
+  control-trafico:
+    build: .
+    container_name: control-trafico
+    restart: unless-stopped
+    ports:
+      - "8091:8090"
+    volumes:
+      - control_traffic_data:/data
+    environment:
+      - TZ=America/Santiago
+      - INTEGRATION_API_KEY=${INTEGRATION_API_KEY}
+      - INTEGRATION_ALLOW_ORIGINS=${INTEGRATION_ALLOW_ORIGINS:-http://localhost:8081}
+volumes:
+  control_traffic_data:
+
+

@@ -1,0 +1,63 @@
+@startuml
+title Despliegue Cloud AWS — Sismico_new_code
+
+cloud "AWS Region" {
+  node "Route 53 / DNS" as DNS
+  node "CloudFront / WAF" as WAF
+  node "Application Load Balancer" as ALB
+
+  node "VPC" {
+    node "Public Subnets" {
+      artifact "NAT Gateway"
+      artifact "Bastion / SSM"
+    }
+
+    node "Private App Subnets" {
+      node "ECS / EKS Service A" as APP1
+      node "ECS / EKS Service B" as APP2
+      artifact "Background Workers"
+    }
+
+    node "Private Data Subnets" {
+      database "Amazon RDS PostgreSQL Multi-AZ" as RDS
+      artifact "ElastiCache Redis" as REDIS
+    }
+  }
+
+  node "AI Layer" {
+    artifact "EC2 / ECS Ollama"
+    artifact "S3 Model Cache / Assets"
+  }
+
+  node "Observability" {
+    artifact "CloudWatch Logs"
+    artifact "CloudWatch Alarms"
+    artifact "AWS Backup"
+  }
+}
+
+cloud "Sitio Mina / Edge" {
+  artifact "Fuentes remotas"
+  artifact "PLC / Semáforos"
+  artifact "Pantallas Browser"
+}
+
+DNS --> WAF
+WAF --> ALB
+ALB --> APP1
+ALB --> APP2
+APP1 --> RDS
+APP2 --> RDS
+APP1 --> REDIS
+APP2 --> REDIS
+APP1 --> "EC2 / ECS Ollama"
+APP2 --> "EC2 / ECS Ollama"
+APP1 --> "Fuentes remotas"
+APP2 --> "Fuentes remotas"
+APP1 --> "PLC / Semáforos"
+APP2 --> "PLC / Semáforos"
+"Pantallas Browser" --> ALB
+RDS --> "AWS Backup"
+APP1 --> "CloudWatch Logs"
+APP2 --> "CloudWatch Logs"
+@enduml

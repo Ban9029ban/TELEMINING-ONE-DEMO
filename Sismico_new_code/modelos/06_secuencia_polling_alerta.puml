@@ -1,0 +1,26 @@
+@startuml
+title Secuencia — Polling, evaluación y alerta
+
+actor Scheduler
+participant "PollingService" as Poll
+participant "RemoteEndpoint" as Remote
+participant "DB" as DB
+participant "RuleEngine" as Rules
+participant "AlertService" as Alert
+participant "Frontend" as Front
+
+Scheduler -> Poll : ejecutar ciclo
+Poll -> DB : obtener endpoints activos
+DB --> Poll : endpoints
+loop por endpoint
+  Poll -> Remote : GET / fuente remota
+  Remote --> Poll : payload JSON/HTML/API
+  Poll -> DB : guardar lecturas / estados
+end
+Poll -> Rules : evaluar reglas con últimos estados
+Rules -> DB : leer umbrales / reglas
+DB --> Rules : reglas
+Rules --> Alert : generar alertas nuevas
+Alert -> DB : persistir AlertEvent
+Alert --> Front : evento disponible por API / polling
+@enduml
